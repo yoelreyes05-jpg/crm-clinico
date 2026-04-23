@@ -1,0 +1,20 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 280px; /* Ancho del sidebar */
+  padding: 2rem 3rem;
+  width: calc(100% - 280px);
+}
+
+@media print {
+  .mainContent {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+}

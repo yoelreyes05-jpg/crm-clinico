@@ -1,0 +1,139 @@
+.portalContainer {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  background-image: var(--color-background-mesh);
+  background-attachment: fixed;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-primary);
+}
+
+.logo h2 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--color-primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-danger);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast);
+}
+
+.logoutBtn:hover {
+  background: rgba(244, 63, 94, 0.1);
+}
+
+.main {
+  padding: 2rem 1.5rem;
+  flex: 1;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.welcomeSection {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.welcomeSection h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-main);
+}
+
+.welcomeSection p {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.historySection h2 {
+  font-size: 1.35rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-main);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.timelineItem {
+  padding: 1.5rem;
+  transition: transform var(--transition-fast);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.timelineItem:hover {
+  transform: scale(1.02);
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.date {
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.badgeCardio, .badgeUro {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badgeCardio { background: rgba(2, 132, 199, 0.15); color: #0369a1; }
+.badgeUro { background: rgba(79, 70, 229, 0.15); color: #4338ca; }
+
+.timelineItem h4 {
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+}
+
+.doctor {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .hideMobile {
+    display: none;
+  }
+}
