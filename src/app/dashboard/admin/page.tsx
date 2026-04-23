@@ -1,17 +1,50 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldAlert, Users, KeyRound, Save } from "lucide-react";
+import { ShieldAlert, Users, KeyRound, Save, UserPlus } from "lucide-react";
 import styles from "../dashboard.module.css";
 import { supabase } from "@/lib/supabase";
 
 export default function AdminDashboard() {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // 🔹 estados para crear doctor
+  const [nuevo, setNuevo] = useState({
+    nombre: "",
+    email: "",
+    password: "",
+    modulo: "general",
+  });
 
   useEffect(() => {
-    fetchUsuarios();
+    checkAdmin();
   }, []);
+
+  // 🔐 VALIDAR ADMIN
+  const checkAdmin = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const { data } = await supabase
+      .from("clinico_usuarios")
+      .select("rol")
+      .eq("id", user.id)
+      .single();
+
+    if (data?.rol !== "admin") {
+      window.location.href = "/dashboard";
+      return;
+    }
+
+    setIsAdmin(true);
+    fetchUsuarios();
+  };
 
   const fetchUsuarios = async () => {
     try {
@@ -29,19 +62,54 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdate = async (userId: string, currentRol: string, currentModulo: string) => {
+  // ✅ ACTUALIZAR USUARIO
+  const handleUpdate = async (userId: string, rol: string, modulo: string) => {
     try {
       const { error } = await supabase
         .from('clinico_usuarios')
-        .update({ rol: currentRol, modulo_asignado: currentModulo })
+        .update({ rol, modulo_asignado: modulo })
         .eq('id', userId);
 
       if (error) throw error;
-      alert("Usuario actualizado exitosamente");
+      alert("Usuario actualizado");
     } catch (error: any) {
-      alert("Error al actualizar: " + error.message);
+      alert("Error: " + error.message);
     }
   };
+
+  // 🔥 CREAR DOCTOR
+  const crearDoctor = async () => {
+    if (!nuevo.email || !nuevo.password) {
+      return alert("Completa email y contraseña");
+    }
+
+    try {
+      // 1. Crear usuario en Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: nuevo.email,
+        password: nuevo.password,
+      });
+
+      if (error) throw error;
+
+      // 2. Guardar en tabla
+      await supabase.from("clinico_usuarios").insert({
+        id: data.user?.id,
+        email: nuevo.email,
+        nombre_completo: nuevo.nombre,
+        rol: "medico",
+        modulo_asignado: nuevo.modulo,
+      });
+
+      alert("✅ Doctor creado");
+      setNuevo({ nombre: "", email: "", password: "", modulo: "general" });
+      fetchUsuarios();
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    }
+  };
+
+  if (!isAdmin) return null;
 
   return (
     <div className={styles.container}>
@@ -49,82 +117,116 @@ export default function AdminDashboard() {
         <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
           <ShieldAlert size={36} color="var(--color-danger)" />
           <div>
-            <h1>Panel de Administrador (Programador)</h1>
-            <p className="text-muted">Gestión de Accesos, Médicos y Reseteo de Contraseñas.</p>
+            <h1>Panel de Administrador</h1>
+            <p className="text-muted">Control total del sistema</p>
           </div>
         </div>
       </header>
 
-      <section className={styles.grid}>
-        <div className={`card ${styles.moduleCard}`}>
-          <div className={styles.iconWrapper} style={{ backgroundColor: `rgba(239, 68, 68, 0.1)`, color: "var(--color-danger)" }}>
-            <Users size={32} />
-          </div>
-          <h3>Gestión de Médicos</h3>
-          <p>Asigna módulos y roles a los usuarios registrados.</p>
+      {/* 🔥 CREAR DOCTOR */}
+      <section className="card" style={{ marginTop: 20 }}>
+        <h3><UserPlus size={18}/> Crear Médico</h3>
+
+        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(4, 1fr)" }}>
+          <input
+            placeholder="Nombre"
+            value={nuevo.nombre}
+            onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
+          />
+          <input
+            placeholder="Email"
+            value={nuevo.email}
+            onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })}
+          />
+          <input
+            placeholder="Contraseña"
+            type="password"
+            value={nuevo.password}
+            onChange={(e) => setNuevo({ ...nuevo, password: e.target.value })}
+          />
+          <select
+            value={nuevo.modulo}
+            onChange={(e) => setNuevo({ ...nuevo, modulo: e.target.value })}
+          >
+            <option value="general">General</option>
+            <option value="urologia">Urología</option>
+            <option value="ginecologia">Ginecología</option>
+            <option value="cardiologia">Cardiología</option>
+            <option value="pediatria">Pediatría</option>
+          </select>
         </div>
 
-        <div className={`card ${styles.moduleCard}`}>
-          <div className={styles.iconWrapper} style={{ backgroundColor: `rgba(245, 158, 11, 0.1)`, color: "var(--color-warning)" }}>
-            <KeyRound size={32} />
-          </div>
-          <h3>Reseteo de Claves</h3>
-          <p>Para resetear claves, usa el panel de Auth en Supabase por seguridad.</p>
-        </div>
+        <button onClick={crearDoctor} style={{ marginTop: 10 }}>
+          ➕ Crear Médico
+        </button>
       </section>
 
+      {/* LISTADO */}
       <section className="card" style={{marginTop: '2rem'}}>
-        <h3>Usuarios Registrados en el Sistema</h3>
+        <h3>Usuarios Registrados</h3>
+
         {loading ? (
-          <p>Cargando usuarios...</p>
+          <p>Cargando...</p>
         ) : (
           <div style={{overflowX: 'auto'}}>
-            <table style={{width: '100%', textAlign: 'left', marginTop: '1rem', borderCollapse: 'collapse', minWidth: '700px'}}>
+            <table style={{width: '100%', marginTop: '1rem'}}>
               <thead>
-                <tr style={{borderBottom: '1px solid var(--color-border)'}}>
-                  <th style={{padding: '0.5rem'}}>Nombre</th>
-                  <th style={{padding: '0.5rem'}}>Email</th>
-                  <th style={{padding: '0.5rem'}}>Rol</th>
-                  <th style={{padding: '0.5rem'}}>Módulo Asignado</th>
-                  <th style={{padding: '0.5rem'}}>Acción</th>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Módulo</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {usuarios.map(user => (
-                  <tr key={user.id} style={{borderBottom: '1px solid var(--color-border)'}}>
-                    <td style={{padding: '0.5rem'}}>{user.nombre_completo || 'Sin nombre'}</td>
-                    <td style={{padding: '0.5rem'}}>{user.email}</td>
-                    <td style={{padding: '0.5rem'}}>
-                      <select 
-                        defaultValue={user.rol || ''}
-                        onChange={(e) => {user.rol = e.target.value}}
-                        style={{padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc'}}
+                  <tr key={user.id}>
+                    <td>{user.nombre_completo || "—"}</td>
+                    <td>{user.email}</td>
+
+                    {/* 🔥 FIX REACT */}
+                    <td>
+                      <select
+                        value={user.rol || ""}
+                        onChange={(e) => {
+                          setUsuarios(prev =>
+                            prev.map(u =>
+                              u.id === user.id ? { ...u, rol: e.target.value } : u
+                            )
+                          );
+                        }}
                       >
                         <option value="paciente">Paciente</option>
                         <option value="medico">Médico</option>
                         <option value="admin">Admin</option>
                       </select>
                     </td>
-                    <td style={{padding: '0.5rem'}}>
-                      <select 
-                        defaultValue={user.modulo_asignado || ''}
-                        onChange={(e) => {user.modulo_asignado = e.target.value}}
-                        style={{padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc'}}
+
+                    <td>
+                      <select
+                        value={user.modulo_asignado || ""}
+                        onChange={(e) => {
+                          setUsuarios(prev =>
+                            prev.map(u =>
+                              u.id === user.id ? { ...u, modulo_asignado: e.target.value } : u
+                            )
+                          );
+                        }}
                       >
-                        <option value="">Ninguno (Paciente/Admin)</option>
+                        <option value="">Ninguno</option>
                         <option value="urologia">Urología</option>
                         <option value="ginecologia">Ginecología</option>
                         <option value="cardiologia">Cardiología</option>
                         <option value="pediatria">Pediatría</option>
                       </select>
                     </td>
-                    <td style={{padding: '0.5rem'}}>
-                      <button 
+
+                    <td>
+                      <button
                         onClick={() => handleUpdate(user.id, user.rol, user.modulo_asignado)}
-                        className="btn btn-primary" 
-                        style={{padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', gap: '0.3rem', alignItems: 'center'}}
                       >
-                        <Save size={14} /> Guardar
+                        <Save size={14}/> Guardar
                       </button>
                     </td>
                   </tr>
