@@ -140,40 +140,64 @@ ALTER TABLE public.clinico_historias_pediatria ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clinico_pacientes_cardiologia ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clinico_historias_cardiologia ENABLE ROW LEVEL SECURITY;
 
--- POLÍTICAS UROLOGÍA (Solo el médico de urología o el propio paciente logueado en la PWA)
+-- POLÍTICAS UROLOGÍA (Admin > Médico > Paciente)
+CREATE POLICY "Admin acceso total Urologia" ON public.clinico_pacientes_urologia FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
+);
 CREATE POLICY "Medicos Urologia y propio paciente" ON public.clinico_pacientes_urologia FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'urologia'
   OR auth_id = auth.uid()
+);
+CREATE POLICY "Historias Urologia Admin" ON public.clinico_historias_urologia FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
 );
 CREATE POLICY "Historias Urologia" ON public.clinico_historias_urologia FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'urologia'
   OR (SELECT auth_id FROM public.clinico_pacientes_urologia WHERE id = paciente_id) = auth.uid()
 );
 
--- POLÍTICAS GINECOLOGÍA
+-- POLÍTICAS GINECOLOGÍA (Admin > Médico > Paciente)
+CREATE POLICY "Admin acceso total Ginecologia" ON public.clinico_pacientes_ginecologia FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
+);
 CREATE POLICY "Medicos Ginecologia y propio paciente" ON public.clinico_pacientes_ginecologia FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'ginecologia'
   OR auth_id = auth.uid()
+);
+CREATE POLICY "Historias Ginecologia Admin" ON public.clinico_historias_ginecologia FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
 );
 CREATE POLICY "Historias Ginecologia" ON public.clinico_historias_ginecologia FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'ginecologia'
   OR (SELECT auth_id FROM public.clinico_pacientes_ginecologia WHERE id = paciente_id) = auth.uid()
 );
 
--- POLÍTICAS PEDIATRÍA
+-- POLÍTICAS PEDIATRÍA (Admin > Médico > Paciente)
+CREATE POLICY "Admin acceso total Pediatria" ON public.clinico_pacientes_pediatria FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
+);
 CREATE POLICY "Medicos Pediatria y propio paciente" ON public.clinico_pacientes_pediatria FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'pediatria'
   OR auth_id = auth.uid()
+);
+CREATE POLICY "Historias Pediatria Admin" ON public.clinico_historias_pediatria FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
 );
 CREATE POLICY "Historias Pediatria" ON public.clinico_historias_pediatria FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'pediatria'
   OR (SELECT auth_id FROM public.clinico_pacientes_pediatria WHERE id = paciente_id) = auth.uid()
 );
 
--- POLÍTICAS CARDIOLOGÍA
+-- POLÍTICAS CARDIOLOGÍA (Admin > Médico > Paciente)
+CREATE POLICY "Admin acceso total Cardiologia" ON public.clinico_pacientes_cardiologia FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
+);
 CREATE POLICY "Medicos Cardiologia y propio paciente" ON public.clinico_pacientes_cardiologia FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'cardiologia'
   OR auth_id = auth.uid()
+);
+CREATE POLICY "Historias Cardiologia Admin" ON public.clinico_historias_cardiologia FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
 );
 CREATE POLICY "Historias Cardiologia" ON public.clinico_historias_cardiologia FOR ALL USING (
   (SELECT modulo_asignado FROM public.clinico_usuarios WHERE id = auth.uid()) = 'cardiologia'
@@ -196,6 +220,11 @@ CREATE TABLE public.clinico_citas (
 
 -- RLS PARA CITAS
 ALTER TABLE public.clinico_citas ENABLE ROW LEVEL SECURITY;
+
+-- Admin tiene acceso total a todas las citas
+CREATE POLICY "Admin acceso total citas" ON public.clinico_citas FOR ALL USING (
+  (SELECT rol FROM public.clinico_usuarios WHERE id = auth.uid()) = 'admin'
+);
 
 -- Un médico solo puede ver y crear citas de su propio módulo
 CREATE POLICY "Medicos ven citas de su modulo" ON public.clinico_citas FOR ALL USING (
