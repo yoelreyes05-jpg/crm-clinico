@@ -4,12 +4,18 @@ import type { NextRequest } from 'next/server'
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Verificar sesión usando la cookie de Supabase
-  const supabaseCookie = request.cookies.get('sb-axzdtgcouczgdxjopikn-auth-token');
-  const hasSession = !!supabaseCookie;
+  // Solo proteger rutas del dashboard
+  if (!path.startsWith('/dashboard')) {
+    return NextResponse.next();
+  }
 
-  // Si no hay sesión y quiere entrar al dashboard → login
-  if (!hasSession && path.startsWith('/dashboard')) {
+  // Buscar cualquier cookie de Supabase (auth token)
+  const allCookies = request.cookies.getAll();
+  const hasSession = allCookies.some(
+    (cookie) => cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')
+  );
+
+  if (!hasSession) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
