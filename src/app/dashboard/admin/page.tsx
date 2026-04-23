@@ -51,7 +51,7 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from('clinico_usuarios')
         .select('*')
-        .order('creado_en', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setUsuarios(data || []);

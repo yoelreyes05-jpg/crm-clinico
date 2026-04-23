@@ -1,66 +1,78 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
-// Este middleware es una estructura base para la protección de rutas.
-// En producción, aquí se verificará el rol del usuario utilizando Supabase SSR
-// Ejemplo: const { data: { session } } = await supabase.auth.getSession()
-// const rol = session.user.user_metadata.rol;
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  const response = NextResponse.next();
 
-  // RUTAS PROTEGIDAS: Si el usuario no está logueado, redirigir a /login
-  // if (!session && (path.startsWith('/dashboard') || path.startsWith('/portal-paciente'))) {
-  //   return NextResponse.redirect(new URL('/login', request.url))
-  // }
+  // Crear cliente Supabase con cookies (SSR)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
 
-  // PROTECCIÓN DE ROLES (Ejemplo de Lógica)
-  // 1. Un paciente no puede entrar al dashboard de médicos
-  /*
-  if (rol === 'paciente' && path.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/portal-paciente', request.url))
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // 1. Si no hay sesión y quiere entrar al dashboard o portal → login
+  if (!user && (path.startsWith('/dashboard') || path.startsWith('/portal-paciente'))) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
-  */
 
-  // 2. Un médico no puede entrar al módulo de otro médico ni al admin
-  /*
+  // Si no hay usuario autenticado, dejar pasar (páginas públicas)
+  if (!user) return response;
+
+  // Obtener rol del usuario
+  const { data: perfil } = await supabase
+    .from('clinico_usuarios')
+    .select('rol, modulo_asignado')
+    .eq('id', user.id)
+    .single();
+
+  const rol = perfil?.rol;
+  const modulo = perfil?.modulo_asignado;
+
+  // 2. Paciente no puede entrar al dashboard de médicos
+  if (rol === 'paciente' && path.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/portal-paciente', request.url));
+  }
+
+  // 3. Médico no puede entrar al admin ni a módulos de otros médicos
   if (rol === 'medico') {
-    const modulo = session.user.user_metadata.modulo_asignado; // ej: 'urologia'
-    
-    // Bloquear acceso a Admin
     if (path.startsWith('/dashboard/admin')) {
-      return NextResponse.redirect(new URL(`/dashboard/${modulo}`, request.url));
+      return NextResponse.redirect(new URL(`/dashboard/${modulo || ''}`, request.url));
     }
 
-    // Bloquear acceso a otros módulos
     const modulos = ['cardiologia', 'ginecologia', 'pediatria', 'urologia'];
     for (const mod of modulos) {
       if (mod !== modulo && path.startsWith(`/dashboard/${mod}`)) {
-        return NextResponse.redirect(new URL(`/dashboard/${modulo}`, request.url));
+        return NextResponse.redirect(new URL(`/dashboard/${modulo || ''}`, request.url));
       }
     }
   }
-  */
 
-  // 3. Un admin no debería ir al portal de pacientes
-  /*
+  // 4. Admin no debe ir al portal de pacientes
   if (rol === 'admin' && path.startsWith('/portal-paciente')) {
-    return NextResponse.redirect(new URL('/dashboard/admin', request.url))
+    return NextResponse.redirect(new URL('/dashboard/admin', request.url));
   }
-  */
 
-  return NextResponse.next()
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }
