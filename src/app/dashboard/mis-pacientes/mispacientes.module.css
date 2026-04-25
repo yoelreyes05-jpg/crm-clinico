@@ -190,9 +190,99 @@
   font-style: italic;
 }
 
+/* ===== BOTONES EDITAR / ELIMINAR en header de card ===== */
+.cardHeaderActions {
+  display: flex; gap: 4px; flex-shrink: 0; margin-left: 4px;
+}
+.btnEditar {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--primary-bg); border: 1px solid var(--border-hover);
+  color: var(--primary); cursor: pointer; transition: all 0.18s;
+}
+.btnEditar:hover { background: var(--primary); color: #fff; }
+.btnEliminar {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px;
+  background: #fff1f1; border: 1px solid #fca5a5;
+  color: #dc2626; cursor: pointer; transition: all 0.18s;
+}
+.btnEliminar:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
+
+/* ===== MODAL EDITAR ===== */
+.modalOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 16px;
+}
+.modal {
+  background: var(--bg-card); border-radius: 14px; width: 100%;
+  max-width: 620px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg-card); z-index: 1;
+}
+.modalHeader h2 { margin: 0; font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.modalClose {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text-secondary); cursor: pointer;
+  transition: all 0.18s;
+}
+.modalClose:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+.modalForm { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.formGroup { display: flex; flex-direction: column; gap: 5px; }
+.formGroup label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.input {
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px;
+  font-size: 13px; color: var(--text-primary); background: var(--bg);
+  font-family: inherit; outline: none; transition: border-color 0.18s;
+}
+.input:focus { border-color: var(--primary); }
+.inputDisabled {
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px;
+  font-size: 13px; color: var(--text-muted); background: var(--bg-card);
+  font-family: inherit;
+}
+.textarea {
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px;
+  font-size: 13px; color: var(--text-primary); background: var(--bg);
+  font-family: inherit; resize: vertical; outline: none; transition: border-color 0.18s;
+}
+.textarea:focus { border-color: var(--primary); }
+
+.errorMsg {
+  padding: 10px 14px; background: #fff1f1; border: 1px solid #fca5a5;
+  border-radius: 7px; color: #dc2626; font-size: 13px;
+}
+.modalActions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding-top: 6px; border-top: 1px solid var(--border);
+}
+.btnCancelar {
+  padding: 9px 18px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--bg); color: var(--text-secondary); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all 0.18s;
+}
+.btnCancelar:hover { background: var(--bg-card); }
+.btnGuardar {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border: none; border-radius: 7px;
+  background: var(--primary); color: #fff; font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all 0.18s;
+}
+.btnGuardar:hover { background: var(--primary-dark); }
+.btnGuardar:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .pacientesGrid { grid-template-columns: 1fr; }
   .cardActions { flex-direction: column; }
   .btnHistorial, .btnGineco { flex: none; width: 100%; }
+  .formGrid { grid-template-columns: 1fr; }
 }

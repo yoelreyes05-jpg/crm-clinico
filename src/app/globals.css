@@ -8,10 +8,10 @@
    ============================================================ */
 :root {
   /* Azules médicos */
-  --primary: #0284c7;          /* azul médico principal */
+  --primary: #0284c7;
   --primary-dark: #0369a1;
   --primary-light: #38bdf8;
-  --primary-bg: #e0f2fe;       /* fondo azul muy suave */
+  --primary-bg: #e0f2fe;
 
   /* Verdes salud */
   --success: #059669;
@@ -26,7 +26,7 @@
   --warning-light: #fef3c7;
 
   /* Escala de grises (fondo limpio) */
-  --bg: #f0f6ff;               /* fondo general azul muy pálido */
+  --bg: #f0f6ff;
   --bg-card: #ffffff;
   --bg-sidebar: #ffffff;
   --border: #e2e8f0;
@@ -50,8 +50,12 @@
   --topbar-height: 64px;
 }
 
-/* Reset */
-* {
+/* ============================================================
+   RESET
+   ============================================================ */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -79,13 +83,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #bfdbfe;
   border-radius: 99px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-light);
 }

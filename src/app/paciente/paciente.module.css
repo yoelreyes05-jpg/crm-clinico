@@ -1,0 +1,246 @@
+/* ============================================================
+   PORTAL DE PACIENTES — ESTILOS
+   ============================================================ */
+
+
+.app {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #e0f2fe 0%, #f0fdf4 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ===== HEADER ===== */
+.header {
+  background: #0284c7;
+  color: #fff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 12px rgba(2,132,199,0.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.headerIcon { font-size: 26px; }
+.headerText h1 { margin: 0; font-size: 18px; font-weight: 800; }
+.headerText p { margin: 0; font-size: 12px; opacity: 0.85; }
+
+/* ===== PANTALLA BÚSQUEDA ===== */
+.searchScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.heroIcon { font-size: 64px; margin-bottom: 16px; }
+.searchScreen h2 {
+  font-size: 22px; font-weight: 800; color: #0c4a6e;
+  margin: 0 0 8px; text-align: center;
+}
+.searchScreen p {
+  font-size: 14px; color: #64748b; text-align: center; margin: 0 0 32px;
+}
+
+.searchBox {
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+.searchLabel {
+  display: block; font-size: 13px; font-weight: 700;
+  color: #0c4a6e; margin-bottom: 8px;
+}
+.searchInput {
+  width: 100%; padding: 14px 16px;
+  border: 2px solid #bae6fd; border-radius: 10px;
+  font-size: 20px; font-weight: 600; color: #0c4a6e;
+  background: #f0f9ff; text-align: center;
+  letter-spacing: 2px; outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.searchInput:focus { border-color: #0284c7; background: #fff; }
+.searchInput::placeholder { font-size: 15px; letter-spacing: 0; font-weight: 400; color: #94a3b8; }
+
+.btnBuscar {
+  width: 100%; margin-top: 14px;
+  padding: 14px; background: #0284c7;
+  color: #fff; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: background 0.2s; display: flex;
+  align-items: center; justify-content: center; gap: 8px;
+  font-family: inherit;
+}
+.btnBuscar:hover { background: #0369a1; }
+.btnBuscar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.errorMsg {
+  margin-top: 14px; padding: 12px 16px;
+  background: #fef2f2; border: 1px solid #fca5a5;
+  border-radius: 8px; color: #dc2626; font-size: 13px; text-align: center;
+}
+
+.disclaimer {
+  margin-top: 20px; padding: 14px;
+  background: #f0fdf4; border: 1px solid #86efac;
+  border-radius: 10px; font-size: 12px; color: #166534;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+
+/* ===== PORTAL CON DATOS ===== */
+.portal {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+}
+
+/* ===== TARJETA PACIENTE ===== */
+.pacienteCard {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+  border: 1px solid #bae6fd;
+}
+.pacienteCardTop {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+}
+.avatar {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: #0284c7; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 20px; flex-shrink: 0;
+}
+.pacienteNombre { margin: 0 0 3px; font-size: 18px; font-weight: 800; color: #0c4a6e; }
+.pacienteCedula { margin: 0; font-size: 12px; color: #64748b; }
+.pacienteTags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.tag {
+  padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd;
+}
+.tagRed { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
+.tagGreen { background: #f0fdf4; color: #166534; border-color: #86efac; }
+
+.btnNuevaBusqueda {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; background: #f0f9ff; color: #0284c7;
+  border: 1px solid #bae6fd; border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.18s; margin-left: auto; flex-shrink: 0;
+  font-family: inherit;
+}
+.btnNuevaBusqueda:hover { background: #0284c7; color: #fff; border-color: #0284c7; }
+
+/* ===== SECCIONES ===== */
+.section { margin-bottom: 24px; }
+.sectionTitle {
+  font-size: 15px; font-weight: 800; color: #0c4a6e;
+  margin: 0 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sectionTitle span { font-size: 18px; }
+.sectionCount {
+  font-size: 11px; font-weight: 700; padding: 2px 8px;
+  border-radius: 10px; background: #e0f2fe; color: #0284c7;
+}
+
+/* ===== CITAS ===== */
+.citaCard {
+  background: #fff; border-radius: 10px; padding: 14px 16px;
+  border: 1px solid #e2e8f0; margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.citaHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.citaFecha { font-size: 13px; font-weight: 700; color: #0c4a6e; }
+.citaBadge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+}
+.badgeProgramada { background: #e0f2fe; color: #0369a1; }
+.badgeCompletada { background: #f0fdf4; color: #166534; }
+.badgeCancelada { background: #fef2f2; color: #dc2626; }
+.citaInfo { font-size: 13px; color: #475569; }
+.citaInfo p { margin: 3px 0; }
+.citaEsp { font-weight: 600; color: #0c4a6e; }
+
+/* ===== HISTORIALES ===== */
+.historialCard {
+  background: #fff; border-radius: 10px;
+  border: 1px solid #e2e8f0; margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden;
+}
+.historialCardHeader {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 14px 16px; cursor: pointer;
+  transition: background 0.15s;
+}
+.historialCardHeader:hover { background: #f8fafc; }
+.historialDiag { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #0c4a6e; }
+.historialMeta { font-size: 11px; color: #94a3b8; display: flex; gap: 8px; flex-wrap: wrap; }
+.historialEsp {
+  padding: 2px 8px; border-radius: 4px; font-weight: 700;
+  background: #e0f2fe; color: #0284c7; font-size: 10px;
+}
+.historialEspGine { background: #fdf4ff; color: #7c3aed; }
+.chevron { color: #94a3b8; flex-shrink: 0; margin-top: 2px; }
+
+.historialDetalle { padding: 0 16px 16px; border-top: 1px solid #f1f5f9; }
+.detalleGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; margin-top: 14px; }
+.detalleItem { background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+.detalleLabel { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin: 0 0 3px; }
+.detalleValor { font-size: 14px; font-weight: 700; color: #0c4a6e; margin: 0; }
+
+.detalleSeccion { margin-bottom: 12px; }
+.detalleSeccion h4 { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin: 0 0 4px; }
+.detalleSeccion p { font-size: 13px; color: #334155; margin: 0; line-height: 1.5; }
+
+/* ===== FICHAS GINECOLÓGICAS ===== */
+.gineCard {
+  background: #fdf4ff; border-radius: 10px;
+  border: 1px solid #ddd6fe; margin-bottom: 12px;
+  overflow: hidden;
+}
+.gineCardHeader {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 14px 16px; cursor: pointer; transition: background 0.15s;
+}
+.gineCardHeader:hover { background: #ede9fe; }
+.gineFecha { font-size: 11px; color: #7c3aed; font-weight: 600; margin-top: 4px; }
+.gineDetalle { padding: 0 16px 16px; border-top: 1px solid #ede9fe; }
+.gineGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; margin-bottom: 14px; }
+.gineItem { background: #fff; border-radius: 8px; padding: 10px 12px; border: 1px solid #ede9fe; }
+
+/* ===== EMPTY STATES ===== */
+.emptySection {
+  text-align: center; padding: 24px;
+  background: #f8fafc; border-radius: 10px;
+  border: 1px dashed #e2e8f0; color: #94a3b8; font-size: 13px;
+}
+
+/* ===== LOADING ===== */
+.loadingScreen {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 20px; gap: 14px;
+  color: #64748b;
+}
+.spinner {
+  width: 40px; height: 40px; border: 3px solid #bae6fd;
+  border-top-color: #0284c7; border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .detalleGrid, .gineGrid { grid-template-columns: 1fr; }
+  .searchScreen { padding: 24px 16px; }
+  .portal { padding: 12px 12px 32px; }
+}

@@ -8,8 +8,8 @@ import styles from "./login.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("yoelreyes05@gmail.com");
-  const [password, setPassword] = useState("yoel2024");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -68,7 +68,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className={styles.form}>
+        <form onSubmit={handleLogin} className={styles.form} autoComplete="off">
           <div className={styles.formGroup}>
             <label className={styles.label}>
               <Mail size={18} />
@@ -82,7 +82,7 @@ export default function LoginPage() {
               disabled={loading}
               placeholder="tu@email.com"
               required
-              autoComplete="email"
+              autoComplete="off"
             />
           </div>
 
@@ -99,7 +99,7 @@ export default function LoginPage() {
               disabled={loading}
               placeholder="••••••••"
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
             <a href="/recuperar-contrasena" className={styles.forgotPassword}>
               ¿Olvidaste tu contraseña?
@@ -126,9 +126,6 @@ export default function LoginPage() {
         </form>
 
         <div className={styles.footer}>
-          <p className={styles.hint}>
-            Demo: yoelreyes05@gmail.com / yoel2024
-          </p>
           <p className={styles.version}>v1.0.0 - Producción</p>
         </div>
       </div>
