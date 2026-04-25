@@ -2,7 +2,6 @@
    PORTAL DE PACIENTES — ESTILOS
    ============================================================ */
 
-
 .app {
   min-height: 100vh;
   background: linear-gradient(160deg, #e0f2fe 0%, #f0fdf4 100%);
@@ -79,6 +78,7 @@
   letter-spacing: 2px; outline: none;
   transition: border-color 0.2s;
   font-family: inherit;
+  box-sizing: border-box;
 }
 .searchInput:focus { border-color: #0284c7; background: #fff; }
 .searchInput::placeholder { font-size: 15px; letter-spacing: 0; font-weight: 400; color: #94a3b8; }
@@ -110,7 +110,7 @@
 
 /* ===== PORTAL CON DATOS ===== */
 .portal {
-  max-width: 700px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 16px 16px 40px;
 }
@@ -118,24 +118,27 @@
 /* ===== TARJETA PACIENTE ===== */
 .pacienteCard {
   background: #fff;
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.09);
   margin-bottom: 20px;
   border: 1px solid #bae6fd;
 }
 .pacienteCardTop {
-  display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px;
 }
 .avatar {
-  width: 54px; height: 54px; border-radius: 50%;
-  background: #0284c7; color: #fff;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-weight: 900; font-size: 20px; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(2,132,199,0.35);
 }
 .pacienteNombre { margin: 0 0 3px; font-size: 18px; font-weight: 800; color: #0c4a6e; }
 .pacienteCedula { margin: 0; font-size: 12px; color: #64748b; }
-.pacienteTags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.pacienteTags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .tag {
   padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
   background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd;
@@ -143,13 +146,50 @@
 .tagRed { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
 .tagGreen { background: #f0fdf4; color: #166534; border-color: #86efac; }
 
+/* Grid de info del paciente */
+.pacienteInfoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.pacienteInfoItem {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: #475569;
+  background: #f8fafc; padding: 8px 10px;
+  border-radius: 8px; border: 1px solid #f1f5f9;
+}
+.pacienteInfoItem strong { color: #0c4a6e; }
+
+/* Alertas */
+.alertaAlergia {
+  margin-top: 2px; padding: 10px 14px;
+  background: #fef2f2; border: 1px solid #fca5a5;
+  border-radius: 10px; font-size: 13px; color: #dc2626;
+  margin-bottom: 10px;
+}
+.antecedentesBox {
+  background: #f0f9ff; border: 1px solid #bae6fd;
+  border-radius: 10px; overflow: hidden;
+}
+.antecedentesBoxHeader {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: #e0f2fe; font-size: 11px; font-weight: 700;
+  color: #0369a1; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.antecedentesBoxText {
+  margin: 0; padding: 10px 14px;
+  font-size: 13px; color: #334155; line-height: 1.5;
+}
+
 .btnNuevaBusqueda {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 14px; background: #f0f9ff; color: #0284c7;
   border: 1px solid #bae6fd; border-radius: 8px;
   font-size: 12px; font-weight: 600; cursor: pointer;
   transition: all 0.18s; margin-left: auto; flex-shrink: 0;
-  font-family: inherit;
+  font-family: inherit; white-space: nowrap;
 }
 .btnNuevaBusqueda:hover { background: #0284c7; color: #fff; border-color: #0284c7; }
 
@@ -174,65 +214,86 @@
 }
 .citaHeader {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 8px; gap: 8px;
 }
 .citaFecha { font-size: 13px; font-weight: 700; color: #0c4a6e; }
 .citaBadge {
   font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0;
 }
 .badgeProgramada { background: #e0f2fe; color: #0369a1; }
 .badgeCompletada { background: #f0fdf4; color: #166534; }
 .badgeCancelada { background: #fef2f2; color: #dc2626; }
 .citaInfo { font-size: 13px; color: #475569; }
 .citaInfo p { margin: 3px 0; }
-.citaEsp { font-weight: 600; color: #0c4a6e; }
+.citaEsp { font-weight: 700; color: #0c4a6e; text-transform: capitalize; }
 
 /* ===== HISTORIALES ===== */
 .historialCard {
-  background: #fff; border-radius: 10px;
+  background: #fff; border-radius: 12px;
   border: 1px solid #e2e8f0; margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06); overflow: hidden;
 }
 .historialCardHeader {
   display: flex; align-items: flex-start; justify-content: space-between;
   padding: 14px 16px; cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s; gap: 8px;
 }
 .historialCardHeader:hover { background: #f8fafc; }
-.historialDiag { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #0c4a6e; }
-.historialMeta { font-size: 11px; color: #94a3b8; display: flex; gap: 8px; flex-wrap: wrap; }
+.historialDiag { margin: 0 0 5px; font-size: 14px; font-weight: 700; color: #0c4a6e; }
+.historialMeta { font-size: 11px; color: #94a3b8; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .historialEsp {
   padding: 2px 8px; border-radius: 4px; font-weight: 700;
   background: #e0f2fe; color: #0284c7; font-size: 10px;
+  text-transform: capitalize;
 }
 .historialEspGine { background: #fdf4ff; color: #7c3aed; }
 .chevron { color: #94a3b8; flex-shrink: 0; margin-top: 2px; }
 
 .historialDetalle { padding: 0 16px 16px; border-top: 1px solid #f1f5f9; }
-.detalleGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; margin-top: 14px; }
-.detalleItem { background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+
+/* Título vitales */
+.vitalesTitulo {
+  margin: 14px 0 8px;
+  font-size: 11px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.detalleGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.detalleItem { background: #f8fafc; border-radius: 8px; padding: 10px 12px; border: 1px solid #f1f5f9; }
 .detalleLabel { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin: 0 0 3px; }
 .detalleValor { font-size: 14px; font-weight: 700; color: #0c4a6e; margin: 0; }
 
-.detalleSeccion { margin-bottom: 12px; }
-.detalleSeccion h4 { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin: 0 0 4px; }
-.detalleSeccion p { font-size: 13px; color: #334155; margin: 0; line-height: 1.5; }
+.detalleSeccion { margin-bottom: 12px; margin-top: 14px; }
+.detalleSeccion h4 { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; margin: 0 0 5px; }
+.detalleSeccion p { font-size: 13px; color: #334155; margin: 0; line-height: 1.6; }
 
 /* ===== FICHAS GINECOLÓGICAS ===== */
 .gineCard {
-  background: #fdf4ff; border-radius: 10px;
+  background: #fdf4ff; border-radius: 12px;
   border: 1px solid #ddd6fe; margin-bottom: 12px;
-  overflow: hidden;
+  overflow: hidden; box-shadow: 0 1px 6px rgba(109,40,217,0.07);
 }
 .gineCardHeader {
   display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 14px 16px; cursor: pointer; transition: background 0.15s;
+  padding: 14px 16px; cursor: pointer; transition: background 0.15s; gap: 8px;
 }
 .gineCardHeader:hover { background: #ede9fe; }
-.gineFecha { font-size: 11px; color: #7c3aed; font-weight: 600; margin-top: 4px; }
+.gineFecha { font-size: 11px; color: #7c3aed; font-weight: 600; margin: 4px 0 0; }
 .gineDetalle { padding: 0 16px 16px; border-top: 1px solid #ede9fe; }
-.gineGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; margin-bottom: 14px; }
+.gineGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 .gineItem { background: #fff; border-radius: 8px; padding: 10px 12px; border: 1px solid #ede9fe; }
+
+/* Antecedentes tags (gine) */
+.antecedentesGrid {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;
+}
+.antecedenteTag {
+  padding: 4px 12px; border-radius: 20px;
+  background: #ede9fe; color: #6d28d9;
+  font-size: 12px; font-weight: 600;
+  border: 1px solid #ddd6fe;
+}
 
 /* ===== EMPTY STATES ===== */
 .emptySection {
@@ -257,6 +318,9 @@
 /* ===== RESPONSIVE ===== */
 @media (max-width: 480px) {
   .detalleGrid, .gineGrid { grid-template-columns: 1fr; }
+  .pacienteInfoGrid { grid-template-columns: 1fr; }
   .searchScreen { padding: 24px 16px; }
   .portal { padding: 12px 12px 32px; }
+  .pacienteCardTop { flex-wrap: wrap; }
+  .btnNuevaBusqueda { margin-left: 0; }
 }
