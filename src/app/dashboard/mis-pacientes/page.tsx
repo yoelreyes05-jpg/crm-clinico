@@ -29,9 +29,27 @@ interface Paciente {
 interface Historial {
   id: string;
   especialidad: string;
-  motivo_consulta: string;
+  motivo_consulta?: string;
+  duracion_sintomas?: string;
+  sintomas_principales?: string;
+  antecedentes_enfermedad_actual?: string;
+  peso?: number;
+  altura?: number;
+  presion_sistolica?: number;
+  presion_diastolica?: number;
+  frecuencia_cardiaca?: number;
+  frecuencia_respiratoria?: number;
+  temperatura?: number;
+  saturacion_oxigeno?: number;
+  examen_fisico_general?: string;
   diagnostico_principal: string;
+  diagnosticos_secundarios?: string;
+  plan_tratamiento?: string;
+  medicamentos?: string;
+  recomendaciones?: string;
+  estudios_solicitados?: string;
   created_at: string;
+  usuarios_clinica?: { nombre_completo: string; especialidad: string } | null;
 }
 
 const calcularEdad = (fecha: string) => {
@@ -211,6 +229,67 @@ function ModalEditarPaciente({
 }
 
 // ============================================================
+// ITEM DE HISTORIAL CON TODOS LOS CAMPOS (expandible)
+// ============================================================
+function HistorialDetalleItem({ h }: { h: Historial }) {
+  const [abierto, setAbierto] = useState(false);
+  const esGine = h.especialidad === "ginecologia";
+
+  return (
+    <div className={styles.historialItem} style={{ flexDirection: "column", alignItems: "stretch", padding: 0 }}>
+      {/* Cabecera clickable */}
+      <button
+        className={styles.historialItemHeader}
+        onClick={() => setAbierto(v => !v)}
+      >
+        <div className={`${styles.historialIcon} ${esGine ? styles.historialIconGine : styles.historialIconGen}`} style={{ flexShrink: 0 }}>
+          {esGine ? <Heart size={13} /> : <FileText size={13} />}
+        </div>
+        <div className={styles.historialBody} style={{ flex: 1 }}>
+          <p className={styles.historialDiag}>{h.diagnostico_principal}</p>
+          <div className={styles.historialMeta}>
+            <span>{formatFecha(h.created_at)}</span>
+            <span className={styles.historialEsp}>{h.especialidad || "General"}</span>
+            {h.usuarios_clinica && <span>Dr. {h.usuarios_clinica.nombre_completo}</span>}
+          </div>
+        </div>
+        <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>
+          {abierto ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </span>
+      </button>
+
+      {/* Detalle expandido */}
+      {abierto && (
+        <div className={styles.historialDetalle}>
+          {/* Signos vitales */}
+          {(h.peso || h.altura || h.presion_sistolica || h.temperatura || h.frecuencia_cardiaca || h.saturacion_oxigeno) && (
+            <div className={styles.vitalesGrid}>
+              {h.peso && <div className={styles.vitalItem}><span className={styles.vitalLabel}>Peso</span><span className={styles.vitalVal}>{h.peso} kg</span></div>}
+              {h.altura && <div className={styles.vitalItem}><span className={styles.vitalLabel}>Altura</span><span className={styles.vitalVal}>{h.altura} m</span></div>}
+              {h.presion_sistolica && <div className={styles.vitalItem}><span className={styles.vitalLabel}>P.A.</span><span className={styles.vitalVal}>{h.presion_sistolica}/{h.presion_diastolica} mmHg</span></div>}
+              {h.frecuencia_cardiaca && <div className={styles.vitalItem}><span className={styles.vitalLabel}>F.C.</span><span className={styles.vitalVal}>{h.frecuencia_cardiaca} lpm</span></div>}
+              {h.temperatura && <div className={styles.vitalItem}><span className={styles.vitalLabel}>Temp.</span><span className={styles.vitalVal}>{h.temperatura}°C</span></div>}
+              {h.saturacion_oxigeno && <div className={styles.vitalItem}><span className={styles.vitalLabel}>Sat O₂</span><span className={styles.vitalVal}>{h.saturacion_oxigeno}%</span></div>}
+              {h.frecuencia_respiratoria && <div className={styles.vitalItem}><span className={styles.vitalLabel}>F.R.</span><span className={styles.vitalVal}>{h.frecuencia_respiratoria} rpm</span></div>}
+            </div>
+          )}
+          {h.motivo_consulta && <div className={styles.campoDetalle}><strong>Motivo:</strong> {h.motivo_consulta}</div>}
+          {h.duracion_sintomas && <div className={styles.campoDetalle}><strong>Duración síntomas:</strong> {h.duracion_sintomas}</div>}
+          {h.sintomas_principales && <div className={styles.campoDetalle}><strong>Síntomas:</strong> {h.sintomas_principales}</div>}
+          {h.antecedentes_enfermedad_actual && <div className={styles.campoDetalle}><strong>Antecedentes:</strong> {h.antecedentes_enfermedad_actual}</div>}
+          {h.examen_fisico_general && <div className={styles.campoDetalle}><strong>Examen físico:</strong> {h.examen_fisico_general}</div>}
+          {h.diagnosticos_secundarios && <div className={styles.campoDetalle}><strong>Diagnósticos secundarios:</strong> {h.diagnosticos_secundarios}</div>}
+          {h.plan_tratamiento && <div className={styles.campoDetalle}><strong>Plan de tratamiento:</strong> {h.plan_tratamiento}</div>}
+          {h.medicamentos && <div className={styles.campoDetalle}><strong>Medicamentos:</strong> {h.medicamentos}</div>}
+          {h.recomendaciones && <div className={styles.campoDetalle}><strong>Recomendaciones:</strong> {h.recomendaciones}</div>}
+          {h.estudios_solicitados && <div className={styles.campoDetalle}><strong>Estudios solicitados:</strong> {h.estudios_solicitados}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // CARD INDIVIDUAL CON HISTORIALES EXPANDIBLES
 // ============================================================
 function PacienteCard({
@@ -364,24 +443,9 @@ function PacienteCard({
 
           {!cargando && (
             <div className={styles.historialesList}>
-              {historiales.map(h => {
-                const esGine = h.especialidad === "ginecologia";
-                return (
-                  <div key={h.id} className={styles.historialItem}>
-                    <div className={`${styles.historialIcon} ${esGine ? styles.historialIconGine : styles.historialIconGen}`}>
-                      {esGine ? <Heart size={14} /> : <FileText size={14} />}
-                    </div>
-                    <div className={styles.historialBody}>
-                      <p className={styles.historialDiag}>{h.diagnostico_principal}</p>
-                      <div className={styles.historialMeta}>
-                        <span>{formatFecha(h.created_at)}</span>
-                        <span className={styles.historialEsp}>{h.especialidad || "General"}</span>
-                        {h.motivo_consulta && <span>{h.motivo_consulta}</span>}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {historiales.map(h => (
+                <HistorialDetalleItem key={h.id} h={h} />
+              ))}
             </div>
           )}
         </div>

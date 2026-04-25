@@ -130,10 +130,16 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("historiales_clinicos")
       .select(`
-        id, especialidad, motivo_consulta, diagnostico_principal,
-        plan_tratamiento, peso, presion_sistolica, presion_diastolica,
-        temperatura, estado, created_at,
-        pacientes (id, nombre_completo, cedula)
+        id, especialidad, motivo_consulta, duracion_sintomas,
+        sintomas_principales, antecedentes_enfermedad_actual,
+        peso, altura, presion_sistolica, presion_diastolica,
+        frecuencia_cardiaca, frecuencia_respiratoria,
+        temperatura, saturacion_oxigeno, examen_fisico_general,
+        diagnostico_principal, diagnosticos_secundarios,
+        plan_tratamiento, medicamentos, recomendaciones,
+        estudios_solicitados, estado, created_at,
+        pacientes (id, nombre_completo, cedula),
+        usuarios_clinica (nombre_completo, especialidad)
       `)
       .order("created_at", { ascending: false });
 

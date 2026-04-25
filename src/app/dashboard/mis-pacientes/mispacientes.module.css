@@ -190,6 +190,37 @@
   font-style: italic;
 }
 
+/* ===== HISTORIAL ITEM CABECERA (clickable) ===== */
+.historialItemHeader {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 16px; width: 100%; background: transparent;
+  border: none; cursor: pointer; text-align: left;
+  transition: background 0.15s; font-family: inherit;
+}
+.historialItemHeader:hover { background: var(--primary-bg); }
+
+/* ===== DETALLE EXPANDIDO DEL HISTORIAL ===== */
+.historialDetalle {
+  padding: 10px 16px 14px; border-top: 1px solid var(--border);
+  background: #f8fbff; display: flex; flex-direction: column; gap: 6px;
+}
+.vitalesGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px; margin-bottom: 8px;
+}
+.vitalItem {
+  background: #fff; border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 8px; display: flex; flex-direction: column; gap: 2px;
+}
+.vitalLabel { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.vitalVal { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.campoDetalle {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+  padding: 4px 0; border-bottom: 1px solid var(--border);
+}
+.campoDetalle:last-child { border-bottom: none; }
+.campoDetalle strong { color: var(--text-primary); font-weight: 700; }
+
 /* ===== BOTONES EDITAR / ELIMINAR en header de card ===== */
 .cardHeaderActions {
   display: flex; gap: 4px; flex-shrink: 0; margin-left: 4px;

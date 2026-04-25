@@ -48,17 +48,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    if (auth.rol !== "admin") {
-      return NextResponse.json(
-        { error: "Solo administradores pueden ver médicos" },
-        { status: 403 }
-      );
-    }
+    // Admin ve todos los campos; médico solo puede ver lista básica (para agendar citas)
+    const selectFields = auth.rol === "admin"
+      ? "id, nombre_completo, email, especialidad, licencia_medica, telefono, estado, created_at"
+      : "id, nombre_completo, especialidad";
 
     const { data, error } = await supabase
       .from("usuarios_clinica")
-      .select("id, nombre_completo, email, especialidad, licencia_medica, telefono, estado, created_at")
+      .select(selectFields)
       .eq("rol", "medico")
+      .eq("estado", true)
       .order("nombre_completo", { ascending: true });
 
     if (error) {
