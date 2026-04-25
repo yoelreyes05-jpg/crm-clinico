@@ -8,7 +8,7 @@ import bcrypt from "bcryptjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function POST(request: NextRequest) {
@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
       .update(token)
       .digest("hex");
 
-    // Buscar médico con este token válido
+    // Buscar usuario con este token válido
     const { data: medico, error: searchError } = await supabase
-      .from("medicos")
+      .from("usuarios_clinica")
       .select("id")
       .eq("reset_token", hashedToken)
       .gt("reset_token_expires", new Date().toISOString())
@@ -56,9 +56,9 @@ export async function POST(request: NextRequest) {
 
     // Actualizar contraseña y limpiar token
     const { error: updateError } = await supabase
-      .from("medicos")
+      .from("usuarios_clinica")
       .update({
-        contrasena: contrasenaHash,
+        password_hash: contrasenaHash,
         reset_token: null,
         reset_token_expires: null,
       })
