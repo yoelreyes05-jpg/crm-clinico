@@ -9,168 +9,118 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Helper para verificar token
-async function verificarToken(request: NextRequest) {
+function verificarToken(request: NextRequest) {
   try {
     const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return { error: "No autorizado", status: 401 };
-    }
-
+    if (!authHeader?.startsWith("Bearer ")) return null;
     const token = authHeader.substring(7);
     const jwtSecret = process.env.JWT_SECRET || "dev_secret_jwt_key_change_in_production_min_32_chars";
-    const decoded = jwt.verify(token, jwtSecret) as any;
-    return { decoded, error: null, status: 200 };
-  } catch (error: any) {
-    return { error: "Token inválido", status: 401 };
+    return jwt.verify(token, jwtSecret) as any;
+  } catch {
+    return null;
   }
 }
 
-// GET /api/pacientes/[id] - Obtener paciente por ID
+// GET /api/pacientes/[id]
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { decoded, error: tokenError } = await verificarToken(request);
-    if (tokenError) {
-      return NextResponse.json({ error: tokenError }, { status: 401 });
-    }
+    const decoded = verificarToken(request);
+    if (!decoded) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-    const { data: paciente, error } = await supabase
+    const { data, error } = await supabase
       .from("pacientes")
       .select("*")
       .eq("id", params.id)
-      .single();
+      .maybeSingle();
 
-    if (error || !paciente) {
-      return NextResponse.json(
-        { error: "Paciente no encontrado" },
-        { status: 404 }
-      );
-    }
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) return NextResponse.json({ error: "Paciente no encontrado" }, { status: 404 });
 
-    return NextResponse.json({
-      success: true,
-      data: paciente,
-    });
-  } catch (error: any) {
-    console.error("Error en GET /api/pacientes/[id]:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, data });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || "Error interno" }, { status: 500 });
   }
 }
 
-// PUT /api/pacientes/[id] - Actualizar paciente
+// PUT /api/pacientes/[id]
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { decoded, error: tokenError } = await verificarToken(request);
-    if (tokenError) {
-      return NextResponse.json({ error: tokenError }, { status: 401 });
-    }
+    const decoded = verificarToken(request);
+    if (!decoded) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const body = await request.json();
-    const {
-      nombre_completo,
-      fecha_nacimiento,
-      sexo,
-      telefono,
-      email,
-      direccion,
-      ciudad,
-      estado_civil,
-      ocupacion,
-      alergias,
-      antecedentes_medicos,
-      tipo_sangre,
-      estado,
-    } = body;
 
-    const { data: paciente, error } = await supabase
-      .from("pacientes")
-      .update({
-        nombre_completo,
-        fecha_nacimiento,
-        sexo,
-        telefono,
-        email,
-        direccion,
-        ciudad,
-        estado_civil,
-        ocupacion,
-        alergias,
-        antecedentes_medicos,
-        tipo_sangre,
-        estado,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", params.id)
-      .select()
-      .single();
-
-    if (error || !paciente) {
-      return NextResponse.json(
-        { error: "Error al actualizar paciente" },
-        { status: 500 }
-      );
+    // Construir objeto de actualización solo con campos que vienen en el body
+    const updateData: Record<string, any> = {};
+    const campos = [
+      "nombre_completo", "fecha_nacimiento", "sexo", "telefono", "email",
+      "direccion", "ciudad", "estado_civil", "ocupacion",
+      "alergias", "antecedentes_medicos", "tipo_sangre", "estado",
+    ];
+    for (const campo of campos) {
+      if (body[campo] !== undefined) updateData[campo] = body[campo];
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Paciente actualizado exitosamente",
-      data: paciente,
-    });
-  } catch (error: any) {
-    console.error("Error en PUT /api/pacientes/[id]:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    const { data, error } = await supabase
+      .from("pacientes")
+      .update(updateData)
+      .eq("id", params.id)
+      .select()
+      .maybeSingle();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) return NextResponse.json({ error: "Paciente no encontrado" }, { status: 404 });
+
+    return NextResponse.json({ success: true, message: "Paciente actualizado", data });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || "Error interno" }, { status: 500 });
   }
 }
 
-// DELETE /api/pacientes/[id] - Eliminar (desactivar) paciente
+// DELETE /api/pacientes/[id] — soft delete (estado = false)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { decoded, error: tokenError } = await verificarToken(request);
-    if (tokenError) {
-      return NextResponse.json({ error: tokenError }, { status: 401 });
-    }
+    const decoded = verificarToken(request);
+    if (!decoded) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-    const { data: paciente, error } = await supabase
+    // Verificar que el paciente existe
+    const { data: existe, error: checkError } = await supabase
       .from("pacientes")
-      .update({
-        estado: false,
-        updated_at: new Date().toISOString(),
-      })
+      .select("id, nombre_completo")
       .eq("id", params.id)
-      .select()
-      .single();
+      .maybeSingle();
 
-    if (error || !paciente) {
-      return NextResponse.json(
-        { error: "Paciente no encontrado" },
-        { status: 404 }
-      );
+    if (checkError) {
+      console.error("Error verificando paciente:", checkError.message);
+      return NextResponse.json({ error: checkError.message }, { status: 500 });
+    }
+    if (!existe) {
+      return NextResponse.json({ error: "Paciente no encontrado" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Paciente eliminado exitosamente",
-    });
-  } catch (error: any) {
-    console.error("Error en DELETE /api/pacientes/[id]:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    // Desactivar paciente (soft delete — los datos se conservan)
+    const { error: updateError } = await supabase
+      .from("pacientes")
+      .update({ estado: false })
+      .eq("id", params.id);
+
+    if (updateError) {
+      console.error("Error eliminando paciente:", updateError.message);
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: "Paciente eliminado exitosamente" });
+  } catch (e: any) {
+    console.error("Error en DELETE /api/pacientes/[id]:", e);
+    return NextResponse.json({ error: e.message || "Error interno" }, { status: 500 });
   }
 }

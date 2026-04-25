@@ -483,16 +483,20 @@ export default function MisPacientesPage() {
   };
 
   const handleEliminar = async (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar a ${nombre}? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Eliminar a ${nombre}?\n\nEl paciente quedará inactivo y sus datos médicos se conservan.`)) return;
     try {
       const res = await fetch(`/api/pacientes/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) cargarPacientes();
-      else alert("Error al eliminar paciente");
-    } catch {
-      alert("Error de conexión");
+      const json = await res.json();
+      if (res.ok) {
+        cargarPacientes();
+      } else {
+        alert(`Error al eliminar: ${json.error || "Error desconocido"}`);
+      }
+    } catch (e: any) {
+      alert(`Error de conexión: ${e.message}`);
     }
   };
 
