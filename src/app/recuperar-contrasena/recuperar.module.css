@@ -1,0 +1,210 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%);
+  padding: 20px;
+}
+
+.formCard {
+  background: white;
+  border-radius: 14px;
+  padding: 40px;
+  box-shadow: 0 8px 32px rgba(2, 132, 199, 0.12);
+  width: 100%;
+  max-width: 440px;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.logoIcon {
+  font-size: 44px;
+  margin-bottom: 8px;
+}
+
+.logoTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+/* ===== FORM ===== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.heading {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: #64748b;
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ===== INPUT ===== */
+.inputGroup {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  position: absolute;
+  left: 13px;
+  color: #0284c7;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 12px 11px 42px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #0284c7;
+  background: #fff;
+  box-shadow: 0 0 0 3px #e0f2fe;
+}
+
+.input::placeholder {
+  color: #94a3b8;
+}
+
+/* ===== BOTONES ===== */
+.btn {
+  padding: 11px 20px;
+  background: #0284c7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn:hover:not(:disabled) {
+  background: #0369a1;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.backLink {
+  background: none;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.backLink:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
+/* ===== ALERTAS ===== */
+.error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  border-left: 4px solid #dc2626;
+}
+
+.success {
+  background: #d1fae5;
+  color: #059669;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  border-left: 4px solid #059669;
+}
+
+/* ===== ÉXITO ===== */
+.successContainer {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 0;
+}
+
+.successIcon {
+  width: 76px;
+  height: 76px;
+  background: #0284c7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: popIn 0.4s ease;
+}
+
+@keyframes popIn {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.successContainer .heading {
+  font-size: 26px;
+}
+
+.successContainer .subtitle {
+  color: #475569;
+  font-size: 14px;
+}
+
+.redirectText {
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .formCard { padding: 28px 18px; }
+  .heading  { font-size: 19px; }
+  .logoTitle { font-size: 22px; }
+}

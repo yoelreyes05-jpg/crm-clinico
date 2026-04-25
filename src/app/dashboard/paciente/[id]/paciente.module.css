@@ -1,0 +1,210 @@
+/* ============================================================
+   DETALLE PACIENTE — ESTILOS
+   ============================================================ */
+.container { max-width: 1000px; margin: 0 auto; }
+
+/* ===== HEADER ===== */
+.header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.header h1 { font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0; flex: 1; }
+.backBtn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.18s;
+}
+.backBtn:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--border-hover); }
+.headerActions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+/* ===== BOTONES HEADER ===== */
+.btnAdd {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; background: var(--primary); color: #fff;
+  border: none; border-radius: 7px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+}
+.btnAdd:hover { background: var(--primary-dark); }
+.btnGineco {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; background: #fdf4ff; color: #7c3aed;
+  border: 1px solid #ddd6fe; border-radius: 7px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+}
+.btnGineco:hover { background: #ede9fe; border-color: #a78bfa; }
+
+/* ===== LOADING ===== */
+.loading {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 60px; color: var(--text-muted);
+}
+.spinner {
+  width: 34px; height: 34px; border: 3px solid var(--border);
+  border-top-color: var(--primary); border-radius: 50%; animation: spin .9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== CARD BASE ===== */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px 20px; box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+.cardTitle {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  margin: 0 0 14px; display: flex; align-items: center; gap: 6px;
+}
+
+/* ===== INFO PACIENTE ===== */
+.pacienteGrid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 10px;
+}
+.infoItem { display: flex; flex-direction: column; gap: 3px; }
+.infoLabel { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+.infoValue { font-size: 13px; color: var(--text-primary); font-weight: 600; }
+.bloodValue {
+  display: inline-block; padding: 1px 8px; border-radius: 10px;
+  background: #fee2e2; color: #dc2626; font-weight: 700; font-size: 13px;
+}
+.tagValue {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  background: var(--primary-bg); color: var(--primary); font-weight: 600; font-size: 12px;
+}
+
+/* ===== STATS BAR ===== */
+.statsBar {
+  display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.statBadge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  background: var(--primary-bg); color: var(--primary); border: 1px solid var(--border-hover);
+}
+.statBadgeGine {
+  background: #fdf4ff; color: #7c3aed; border: 1px solid #ddd6fe;
+}
+
+/* ===== HISTORIAL CARD ===== */
+.historialCard {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: var(--shadow-sm); margin-bottom: 12px; overflow: hidden;
+}
+.historialHeader {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 16px; cursor: pointer; transition: background 0.15s;
+  border-bottom: 1px solid transparent;
+}
+.historialHeader:hover { background: var(--primary-bg); }
+.historialHeader.expanded { border-bottom-color: var(--border); background: var(--primary-bg); }
+
+.historialIconWrap {
+  width: 36px; height: 36px; border-radius: 8px; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.iconGen { background: var(--primary-bg); color: var(--primary); }
+.iconGine { background: #fdf4ff; color: #7c3aed; }
+
+.historialMeta { flex: 1; min-width: 0; }
+.historialDiag {
+  font-size: 13px; font-weight: 700; color: var(--text-primary);
+  margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.historialSub {
+  font-size: 11px; color: var(--text-muted); display: flex; gap: 8px; flex-wrap: wrap;
+}
+.espBadge {
+  padding: 1px 6px; border-radius: 4px; font-weight: 600;
+  background: var(--primary-bg); color: var(--primary); font-size: 10px;
+}
+.espBadgeGine { background: #fdf4ff; color: #7c3aed; }
+
+/* ===== BOTÓN IMPRIMIR EN CARD ===== */
+.printBtn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text-secondary); font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s; flex-shrink: 0;
+  white-space: nowrap;
+}
+.printBtn:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--border-hover); }
+.printBtnGine:hover { background: #fdf4ff; color: #7c3aed; border-color: #ddd6fe; }
+
+/* ===== DETALLE HISTORIAL ===== */
+.historialDetalle { padding: 16px 20px; }
+
+.detalleGrid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px;
+}
+.detalleGrid2 { grid-template-columns: 1fr 1fr; }
+.detalleItem { display: flex; flex-direction: column; gap: 3px; }
+.detalleLabel { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+.detalleValue { font-size: 13px; color: var(--text-primary); font-weight: 500; line-height: 1.4; }
+.detalleValueBlock {
+  font-size: 13px; color: var(--text-primary); font-weight: 500; line-height: 1.5;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+}
+
+.sectionTitle {
+  font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;
+  letter-spacing: 0.05em; margin: 14px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border);
+}
+
+/* ===== SIGNOS VITALES ===== */
+.vitalesGrid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px;
+}
+.vitalItem {
+  display: flex; flex-direction: column; gap: 3px; padding: 8px 10px;
+  background: var(--primary-bg); border: 1px solid var(--border-hover); border-radius: 7px;
+}
+.vitalLabel { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+.vitalValue { font-size: 15px; color: var(--primary); font-weight: 800; }
+.vitalUnit { font-size: 10px; color: var(--text-muted); }
+
+/* ===== ANTECEDENTES GINECO ===== */
+.antGrid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 10px;
+}
+.antItem {
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+  border: 1px solid var(--border); border-radius: 6px; font-size: 11px;
+  color: var(--text-secondary);
+}
+.antSi { border-color: #7c3aed !important; background: #fdf4ff !important; color: #7c3aed !important; font-weight: 700; }
+.antDot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+.antDotSi { background: #7c3aed !important; }
+
+/* ===== TABLA CONTROLES ===== */
+.tableWrap { overflow-x: auto; border-radius: 7px; border: 1px solid var(--border); margin-top: 8px; }
+.controlTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+.controlTable th {
+  background: var(--primary); color: #fff; padding: 6px 8px;
+  text-align: center; font-weight: 600; white-space: nowrap;
+}
+.controlTable td {
+  border-bottom: 1px solid var(--border); padding: 5px 7px;
+  text-align: center; color: var(--text-primary);
+}
+.controlTable tr:last-child td { border-bottom: none; }
+.controlTable tr:hover td { background: #f0f9ff; }
+.tdNum { font-weight: 700; color: var(--text-muted); background: var(--bg); }
+
+/* ===== EMPTY ===== */
+.emptyHistoriales {
+  text-align: center; padding: 40px; color: var(--text-muted);
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; font-size: 14px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .pacienteGrid { grid-template-columns: repeat(2,1fr); }
+  .detalleGrid { grid-template-columns: repeat(2,1fr); }
+  .vitalesGrid { grid-template-columns: repeat(2,1fr); }
+  .antGrid { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 480px) {
+  .pacienteGrid { grid-template-columns: 1fr 1fr; }
+  .detalleGrid { grid-template-columns: 1fr 1fr; }
+  .vitalesGrid { grid-template-columns: 1fr 1fr; }
+}

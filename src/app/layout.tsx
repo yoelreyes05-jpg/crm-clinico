@@ -1,31 +1,31 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-
 export const metadata: Metadata = {
-  title: "CRM Clínico - Sistema Integral de Gestión Médica",
-  description: "Plataforma premium para el seguimiento clínico en Cardiología, Ginecología, Pediatría y Urología.",
-  manifest: "/manifest.json",
-  themeColor: "#0ea5e9",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Mi Salud"
-  }
+  title: "CRM Clínico - Sistema de Gestión Médica",
+  description: "Sistema integral de gestión clínica multi-especialidad",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="es" className={inter.variable}>
-      <body className="antialiased">
-        {children}
-      </body>
+    <html lang="es">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

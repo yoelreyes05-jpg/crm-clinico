@@ -1,313 +1,111 @@
+/* ============================================================
+   ESTILOS GLOBALES - CRM CLÍNICO
+   Paleta médica clara y profesional
+   ============================================================ */
+
+/* ============================================================
+   VARIABLES CSS — TEMA MÉDICO CLARO
+   ============================================================ */
 :root {
-  /* Paleta de Colores Ultra Premium (Basado en la Propuesta) */
-  --color-primary: #0284c7;        /* Azul Médico Profundo */
-  --color-primary-dark: #0369a1;
-  --color-primary-light: #38bdf8;  /* Cyan Vibrante */
-  --color-primary-gradient: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
-  
-  --color-secondary: #0d9488;      /* Teal/Verde Médico */
-  --color-secondary-gradient: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
-  
-  --color-background: #f1f5f9;     /* Fondo base muy claro */
-  --color-background-mesh: radial-gradient(at 0% 0%, hsla(199,89%,85%,1) 0, transparent 50%), radial-gradient(at 100% 100%, hsla(173,80%,88%,1) 0, transparent 50%);
-  
-  --color-surface: rgba(255, 255, 255, 0.85); /* Superficie base para glassmorphism */
-  
-  --color-text-main: #0f172a;
-  --color-text-muted: #64748b;
-  --color-text-light: #94a3b8;
-  
-  --color-border: rgba(226, 232, 240, 0.6);
-  
-  --color-danger: #f43f5e;
-  --color-danger-gradient: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
-  --color-warning: #f59e0b;
-  
-  /* Sombras Modernas (Suaves y Difusas) */
-  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 25px 50px -12px rgba(15, 23, 42, 0.12);
-  --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.4);
-  
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.5rem;
-  --radius-full: 9999px;
-  
-  /* Transiciones */
-  --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Azules médicos */
+  --primary: #0284c7;          /* azul médico principal */
+  --primary-dark: #0369a1;
+  --primary-light: #38bdf8;
+  --primary-bg: #e0f2fe;       /* fondo azul muy suave */
+
+  /* Verdes salud */
+  --success: #059669;
+  --success-light: #d1fae5;
+
+  /* Rojos/alertas */
+  --danger: #dc2626;
+  --danger-light: #fee2e2;
+
+  /* Amarillo/advertencia */
+  --warning: #d97706;
+  --warning-light: #fef3c7;
+
+  /* Escala de grises (fondo limpio) */
+  --bg: #f0f6ff;               /* fondo general azul muy pálido */
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
+  --border: #e2e8f0;
+  --border-hover: #bfdbfe;
+
+  /* Texto */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
+
+  /* Sombras suaves */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.10);
+  --shadow-sidebar: 2px 0 12px rgba(2, 132, 199, 0.08);
+
+  /* Sidebar */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --topbar-height: 64px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: #09090b;
-    --color-background-mesh: radial-gradient(at 0% 0%, hsla(199,89%,15%,1) 0, transparent 50%), radial-gradient(at 100% 100%, hsla(173,80%,12%,1) 0, transparent 50%);
-    --color-surface: rgba(24, 24, 27, 0.75);
-    --color-text-main: #f8fafc;
-    --color-text-muted: #94a3b8;
-    --color-border: rgba(51, 65, 85, 0.5);
-    --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-  }
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  min-height: 100vh;
+html {
+  scroll-behavior: smooth;
+  overflow: hidden;
 }
 
 body {
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-  background-color: var(--color-background);
-  background-image: var(--color-background-mesh);
-  background-attachment: fixed;
-  color: var(--color-text-main);
-  line-height: 1.6;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* ============================================================
+   SCROLLBAR GLOBAL (discreta y médica)
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #bfdbfe;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
+}
+
+/* ============================================================
+   UTILIDADES GLOBALES
+   ============================================================ */
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
 }
 
 a {
-  color: var(--color-primary);
   text-decoration: none;
-  transition: color var(--transition-fast);
-}
-
-/* Tipografía */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-/* Glassmorphism Premium Utilities */
-.glass {
-  background: var(--color-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: var(--shadow-md);
-}
-
-@media (prefers-color-scheme: dark) {
-  .glass {
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-}
-
-/* Componentes Base - Botones */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.75rem;
-  border-radius: var(--radius-full);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  border: none;
-  gap: 0.5rem;
-  letter-spacing: 0.01em;
-}
-
-.btn-primary {
-  background: var(--color-primary-gradient);
-  color: white;
-  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(2, 132, 199, 0.45);
-  filter: brightness(1.1);
-}
-
-.btn-outline {
-  background: transparent;
-  border: 2px solid var(--color-border);
-  color: var(--color-text-main);
-}
-
-.btn-outline:hover {
-  border-color: var(--color-primary-light);
-  color: var(--color-primary);
-  background: rgba(56, 189, 248, 0.05);
-}
-
-/* Form Inputs Premium */
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.input-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.input-field {
-  width: 100%;
-  padding: 0.875rem 1.25rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background-color: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  color: var(--color-text-main);
-  font-family: inherit;
-  font-size: 0.95rem;
-  transition: all var(--transition-fast);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: var(--color-primary-light);
-  background-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-/* Tarjetas (Cards) Premium */
-.card {
-  background: var(--color-surface);
-  backdrop-filter: blur(16px);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: 2rem;
-  border: 1px solid var(--color-border);
-  transition: box-shadow var(--transition-normal);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-}
-
-/* Checkboxes Premium */
-input[type="checkbox"] {
-  appearance: none;
-  background-color: rgba(255, 255, 255, 0.8);
-  margin: 0;
-  font: inherit;
-  color: currentColor;
-  width: 1.25em;
-  height: 1.25em;
-  border: 2px solid var(--color-border);
-  border-radius: 0.35em;
-  display: grid;
-  place-content: center;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-input[type="checkbox"]::before {
-  content: "";
-  width: 0.65em;
-  height: 0.65em;
-  transform: scale(0);
-  transition: 120ms transform ease-in-out;
-  box-shadow: inset 1em 1em white;
-  transform-origin: center;
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-}
-
-input[type="checkbox"]:checked {
-  background: var(--color-primary-gradient);
-  border-color: transparent;
-}
-
-input[type="checkbox"]:checked::before {
-  transform: scale(1);
-}
-
-/* ====== ESTILOS DE IMPRESIÓN ====== */
-@media print {
-  .no-print, nav, footer, .sidebar, .btn, button {
-    display: none !important;
-  }
-
-  body {
-    background: white !important;
-    color: black !important;
-    font-size: 11pt;
-  }
-
-  .glass, .card {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: 1px solid #ddd !important;
-    backdrop-filter: none !important;
-  }
-
-  .input-field {
-    border: none;
-    border-bottom: 1px dotted #999;
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0.25rem 0;
-  }
-
-  .print-break-inside-avoid {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* Reducir tamaño de datos del paciente para ahorrar espacio */
-  .patient-header-print .input-group {
-    margin-bottom: 0.1rem;
-    gap: 0.1rem;
-  }
-  
-  .patient-header-print .input-label {
-    font-size: 0.7rem;
-    margin-bottom: 0;
-  }
-  
-  .patient-header-print .input-field {
-    padding: 0.1rem 0;
-    font-size: 0.85rem;
-    min-height: auto;
-  }
-
-  .patient-header-print {
-    padding: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
-  }
-
-  /* Pie de página exclusivo para impresión (Firma y Próxima Cita) */
-  .print-footer {
-    display: block !important;
-    margin-top: 3rem;
-    padding-top: 1rem;
-    text-align: center;
-    page-break-inside: avoid;
-  }
-
-  .signature-line {
-    width: 250px;
-    border-bottom: 1px solid black;
-    margin: 0 auto 0.5rem auto;
-  }
-
-  @page {
-    size: A4;
-    margin: 1.5cm;
-  }
-}
-
-.print-footer {
-  display: none; /* Oculto en pantalla normal */
+  color: inherit;
 }
