@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, Search, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Search, RefreshCw, Download } from "lucide-react";
 import styles from "./paciente.module.css";
 
 // ============================================================
@@ -53,6 +53,7 @@ interface Historial {
   usuarios_clinica?: { nombre_completo: string } | null;
 }
 
+// Ficha ginecológica: viene de historiales_clinicos con join historiales_ginecologia
 interface FichaGine {
   id: string;
   motivo_consulta?: string;
@@ -60,18 +61,31 @@ interface FichaGine {
   plan_tratamiento?: string;
   medicamentos?: string;
   recomendaciones?: string;
-  fum?: string;
-  fpp?: string;
-  semanas_gestacion?: number;
-  vdrl?: boolean;
-  vdrl_resultado?: string;
-  gestas?: number;
-  partos?: number;
-  cesareas?: number;
-  abortos?: number;
-  controles_prenatales?: any[];
+  peso?: number;
+  presion_sistolica?: number;
+  presion_diastolica?: number;
   created_at: string;
-  usuarios_clinica?: { nombre_completo: string } | null;
+  usuarios_clinica?: { nombre_completo: string; especialidad: string } | null;
+  // Datos de historiales_ginecologia (join como array)
+  historiales_ginecologia?: Array<{
+    fum?: string;
+    fpp?: string;
+    vdrl?: string;
+    hb?: string;
+    ta_inicial?: string;
+    antitetanicas?: string;
+    embarazo?: boolean;
+    tbc_pulmonar?: boolean;
+    hipertension?: boolean;
+    gemelares?: boolean;
+    diabetes?: boolean;
+    hipertension_cronica?: boolean;
+    cirugia_pelvico_uterina?: boolean;
+    infertilidad?: boolean;
+    antecedentes_familiares?: string;
+    dudas?: string;
+    controles_prenatales?: any[];
+  }>;
 }
 
 interface PortalData {
@@ -227,6 +241,9 @@ function HistorialCard({ h }: { h: Historial }) {
 // ============================================================
 function GineCard({ g }: { g: FichaGine }) {
   const [open, setOpen] = useState(false);
+  const gine = g.historiales_ginecologia?.[0];
+  const controles = gine?.controles_prenatales || [];
+  const contFiltrados = controles.filter((c: any) => c.fecha);
 
   return (
     <div className={styles.gineCard}>
@@ -235,7 +252,7 @@ function GineCard({ g }: { g: FichaGine }) {
           <p className={styles.historialDiag} style={{ color: "#6d28d9" }}>{g.diagnostico_principal}</p>
           <p className={styles.gineFecha}>
             Ficha Ginecológica · {fmtFecha(g.created_at)}
-            {g.usuarios_clinica && ` · Dra. ${g.usuarios_clinica.nombre_completo}`}
+            {g.usuarios_clinica && ` · ${g.usuarios_clinica.nombre_completo}`}
           </p>
         </div>
         <span className={styles.chevron}>
@@ -245,84 +262,101 @@ function GineCard({ g }: { g: FichaGine }) {
 
       {open && (
         <div className={styles.gineDetalle}>
-          {/* Datos obstétricos */}
-          {(g.gestas !== undefined || g.fum || g.semanas_gestacion) && (
+          {/* Datos obstétricos del join */}
+          {gine && (gine.fum || gine.fpp || gine.vdrl || gine.hb || gine.ta_inicial) && (
             <div className={styles.gineGrid}>
-              {g.gestas !== undefined && (
-                <div className={styles.gineItem}>
-                  <p className={styles.detalleLabel}>G/P/C/A</p>
-                  <p className={styles.detalleValor}>{g.gestas}/{g.partos}/{g.cesareas}/{g.abortos}</p>
-                </div>
-              )}
-              {g.fum && (
+              {gine.fum && (
                 <div className={styles.gineItem}>
                   <p className={styles.detalleLabel}>Última Menstruación</p>
-                  <p className={styles.detalleValor}>{fmtFecha(g.fum)}</p>
+                  <p className={styles.detalleValor}>{fmtFecha(gine.fum)}</p>
                 </div>
               )}
-              {g.fpp && (
+              {gine.fpp && (
                 <div className={styles.gineItem}>
                   <p className={styles.detalleLabel}>Fecha Probable Parto</p>
-                  <p className={styles.detalleValor}>{fmtFecha(g.fpp)}</p>
+                  <p className={styles.detalleValor}>{fmtFecha(gine.fpp)}</p>
                 </div>
               )}
-              {g.semanas_gestacion !== undefined && (
-                <div className={styles.gineItem}>
-                  <p className={styles.detalleLabel}>Semanas de Gestación</p>
-                  <p className={styles.detalleValor}>{g.semanas_gestacion} sem</p>
-                </div>
-              )}
-              {g.vdrl !== undefined && (
+              {gine.vdrl && (
                 <div className={styles.gineItem}>
                   <p className={styles.detalleLabel}>VDRL</p>
-                  <p className={styles.detalleValor}>
-                    {g.vdrl ? `Positivo${g.vdrl_resultado ? ` — ${g.vdrl_resultado}` : ""}` : "Negativo"}
-                  </p>
+                  <p className={styles.detalleValor}>{gine.vdrl}</p>
                 </div>
               )}
+              {gine.hb && (
+                <div className={styles.gineItem}>
+                  <p className={styles.detalleLabel}>Hemoglobina</p>
+                  <p className={styles.detalleValor}>{gine.hb}</p>
+                </div>
+              )}
+              {gine.ta_inicial && (
+                <div className={styles.gineItem}>
+                  <p className={styles.detalleLabel}>T.A. Inicial</p>
+                  <p className={styles.detalleValor}>{gine.ta_inicial}</p>
+                </div>
+              )}
+              {gine.antitetanicas && (
+                <div className={styles.gineItem}>
+                  <p className={styles.detalleLabel}>Antitetánicas</p>
+                  <p className={styles.detalleValor}>{gine.antitetanicas}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Antecedentes */}
+          {gine && (gine.embarazo || gine.hipertension || gine.diabetes || gine.tbc_pulmonar) && (
+            <div className={styles.detalleSeccion}>
+              <h4>Antecedentes</h4>
+              <p>
+                {[
+                  gine.embarazo && "Embarazo previo",
+                  gine.hipertension && "Hipertensión",
+                  gine.diabetes && "Diabetes",
+                  gine.tbc_pulmonar && "TBC Pulmonar",
+                  gine.gemelares && "Gemelares",
+                  gine.hipertension_cronica && "HTA Crónica",
+                  gine.cirugia_pelvico_uterina && "Cir. Pélvico-Uterina",
+                  gine.infertilidad && "Infertilidad",
+                ].filter(Boolean).join(" · ")}
+              </p>
             </div>
           )}
 
           {g.motivo_consulta && (
-            <div className={styles.detalleSeccion}>
-              <h4>Motivo</h4>
-              <p>{g.motivo_consulta}</p>
-            </div>
+            <div className={styles.detalleSeccion}><h4>Motivo</h4><p>{g.motivo_consulta}</p></div>
           )}
           {g.plan_tratamiento && (
-            <div className={styles.detalleSeccion}>
-              <h4>Plan de Tratamiento</h4>
-              <p>{g.plan_tratamiento}</p>
-            </div>
+            <div className={styles.detalleSeccion}><h4>Plan de Tratamiento</h4><p>{g.plan_tratamiento}</p></div>
           )}
           {g.medicamentos && (
-            <div className={styles.detalleSeccion}>
-              <h4>Medicamentos</h4>
-              <p>{g.medicamentos}</p>
-            </div>
+            <div className={styles.detalleSeccion}><h4>Medicamentos</h4><p>{g.medicamentos}</p></div>
           )}
           {g.recomendaciones && (
-            <div className={styles.detalleSeccion}>
-              <h4>Recomendaciones</h4>
-              <p>{g.recomendaciones}</p>
-            </div>
+            <div className={styles.detalleSeccion}><h4>Recomendaciones</h4><p>{g.recomendaciones}</p></div>
+          )}
+          {gine?.dudas && (
+            <div className={styles.detalleSeccion}><h4>Observaciones</h4><p>{gine.dudas}</p></div>
+          )}
+          {gine?.antecedentes_familiares && (
+            <div className={styles.detalleSeccion}><h4>Antecedentes Familiares</h4><p>{gine.antecedentes_familiares}</p></div>
           )}
 
           {/* Controles prenatales */}
-          {Array.isArray(g.controles_prenatales) && g.controles_prenatales.length > 0 && (
+          {contFiltrados.length > 0 && (
             <div className={styles.detalleSeccion}>
-              <h4>Controles Prenatales ({g.controles_prenatales.filter((c: any) => c.fecha).length} registros)</h4>
+              <h4>Controles Prenatales ({contFiltrados.length} registros)</h4>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", marginTop: 8 }}>
                   <thead>
                     <tr style={{ background: "#ede9fe" }}>
-                      {["#","Fecha","Sem","Peso","PA","FC","AU","FCF","Pres."].map(h => (
-                        <th key={h} style={{ padding: "4px 6px", textAlign: "left", color: "#6d28d9", fontWeight: 700, borderBottom: "1px solid #ddd6fe" }}>{h}</th>
+                      {["#","Fecha","Sem","Peso","PA","F.C.","Alt. Uterina","FCC","Presentación"].map(col => (
+                        <th key={col} style={{ padding: "4px 6px", textAlign: "left", color: "#6d28d9", fontWeight: 700, borderBottom: "1px solid #ddd6fe", whiteSpace: "nowrap" }}>{col}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {g.controles_prenatales.filter((c: any) => c.fecha).map((c: any, i: number) => (
+                    {contFiltrados.map((c: any, i: number) => (
                       <tr key={i} style={{ borderBottom: "1px solid #f3f4f6" }}>
                         <td style={{ padding: "4px 6px" }}>{i + 1}</td>
                         <td style={{ padding: "4px 6px" }}>{fmtFecha(c.fecha)}</td>
@@ -354,6 +388,34 @@ export default function PacientePortal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [data, setData] = useState<PortalData | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [instalado, setInstalado] = useState(false);
+
+  // Registrar Service Worker y capturar evento de instalación PWA
+  useEffect(() => {
+    // Registrar SW
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", () => {
+      setInstallPrompt(null);
+      setInstalado(true);
+    });
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") setInstallPrompt(null);
+  };
 
   const buscar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -386,6 +448,16 @@ export default function PacientePortal() {
           <h1>Mi Historial Clínico</h1>
           <p>Portal de Pacientes — CRM Clínico</p>
         </div>
+        {/* Botón instalar PWA */}
+        {installPrompt && !instalado && (
+          <button className={styles.btnInstalar} onClick={handleInstall} title="Instalar app en tu dispositivo">
+            <Download size={15} />
+            <span>Instalar App</span>
+          </button>
+        )}
+        {instalado && (
+          <span className={styles.instaladoBadge}>✓ Instalada</span>
+        )}
       </header>
 
       {/* Pantalla búsqueda */}

@@ -63,10 +63,23 @@ const fmtDate = (d: string) =>
 /* =========================================================
    IMPRESIÓN — Historial Clínico General
    ========================================================= */
+function abrirVentanaImpresion(html: string) {
+  const SCRIPT = "<scr" + "ipt>window.onload=function(){window.print();}<\/scr" + "ipt>";
+  const htmlFinal = html.replace("</body>", SCRIPT + "</body>");
+  const blob = new Blob([htmlFinal], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+}
+
 function imprimirHistorialGeneral(paciente: Paciente, h: Historial, medicoNombre: string) {
-  const w = window.open("", "_blank");
-  if (!w) return;
-  w.document.write(`<!DOCTYPE html><html lang="es"><head>
+  const html = `<!DOCTYPE html><html lang="es"><head>
   <meta charset="UTF-8">
   <title>Historial Clínico — ${paciente.nombre_completo}</title>
   <style>
@@ -116,7 +129,7 @@ function imprimirHistorialGeneral(paciente: Paciente, h: Historial, medicoNombre
 
 <div class="hdr">
   <div class="hdr-left">
-    <h1>🏥 Historial Clínico</h1>
+    <h1>🏥 HISTORIAL CLINICO</h1>
     <p>Médico: ${medicoNombre} &nbsp;·&nbsp; Especialidad: ${h.especialidad || "General"}</p>
     <p>Fecha de consulta: ${fmt(h.created_at)} &nbsp;·&nbsp; Emitido: ${fmt(new Date().toISOString())}</p>
   </div>
@@ -173,10 +186,8 @@ ${paciente.alergias ? `<div class="field-block" style="margin-top:5px;border-col
   <div class="firma">Sello / Fecha</div>
 </div>
 <p class="meta">ID Historial: ${h.id} &nbsp;·&nbsp; Generado el ${new Date().toLocaleString("es-ES")}</p>
-
-</body></html>`);
-  w.document.close();
-  setTimeout(() => w.print(), 300);
+</body></html>`;
+  abrirVentanaImpresion(html);
 }
 
 /* =========================================================
@@ -184,8 +195,6 @@ ${paciente.alergias ? `<div class="field-block" style="margin-top:5px;border-col
    ========================================================= */
 function imprimirFichaGine(paciente: Paciente, h: Historial, medicoNombre: string) {
   const gine = h.historiales_ginecologia?.[0];
-  const w = window.open("", "_blank");
-  if (!w) return;
 
   const antList = gine ? [
     ["Embarazo", gine.embarazo], ["TBC Pulmonar", gine.tbc_pulmonar],
@@ -216,7 +225,7 @@ function imprimirFichaGine(paciente: Paciente, h: Historial, medicoNombre: strin
       <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>`).join("");
 
-  w.document.write(`<!DOCTYPE html><html lang="es"><head>
+  const html = `<!DOCTYPE html><html lang="es"><head>
   <meta charset="UTF-8">
   <title>Ficha Ginecológica — ${paciente.nombre_completo}</title>
   <style>
@@ -339,10 +348,8 @@ ${gine?.dudas ? `<div class="field-block" style="margin-top:4px"><label>Dudas / 
   <div class="firma">Sello / Fecha</div>
 </div>
 <p class="meta">ID Historial: ${h.id} &nbsp;·&nbsp; Generado el ${new Date().toLocaleString("es-ES")}</p>
-
-</body></html>`);
-  w.document.close();
-  setTimeout(() => w.print(), 300);
+</body></html>`;
+  abrirVentanaImpresion(html);
 }
 
 /* =========================================================
@@ -367,7 +374,7 @@ function HistorialCard({
   ] : [];
 
   const handlePrint = (e: React.MouseEvent) => {
-    e.stopPropagation(); // no cerrar el card al hacer clic en imprimir
+    e.stopPropagation();
     if (esGine) imprimirFichaGine(paciente, h, medicoNombre);
     else imprimirHistorialGeneral(paciente, h, medicoNombre);
   };
@@ -566,15 +573,12 @@ export default function PacienteDetallePage() {
       const histGen: Historial[] = resHist.ok ? (await resHist.json()).data || [] : [];
       const histGineRaw: any[] = resGine.ok ? (await resGine.json()).data || [] : [];
 
-      // Los histGineRaw tienen la forma: { id (= historial_clinico.id), historiales_ginecologia: [...] }
-      // Fusionamos con histGen por id
       const gineMap = new Map(histGineRaw.map((g: any) => [g.id, g]));
       const merged: Historial[] = histGen.map(h =>
         gineMap.has(h.id)
           ? { ...h, historiales_ginecologia: gineMap.get(h.id).historiales_ginecologia }
           : h
       );
-      // Agregar ginecológicos que no estén en histGen (borde de seguridad)
       histGineRaw.forEach((g: any) => {
         if (!histGen.find(h => h.id === g.id)) merged.push(g as Historial);
       });

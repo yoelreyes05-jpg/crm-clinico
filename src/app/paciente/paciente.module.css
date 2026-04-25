@@ -23,8 +23,24 @@
   z-index: 100;
 }
 .headerIcon { font-size: 26px; }
+.headerText { flex: 1; }
 .headerText h1 { margin: 0; font-size: 18px; font-weight: 800; }
 .headerText p { margin: 0; font-size: 12px; opacity: 0.85; }
+
+.btnInstalar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; background: rgba(255,255,255,0.2);
+  color: #fff; border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 8px; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.18s; white-space: nowrap;
+  font-family: inherit;
+}
+.btnInstalar:hover { background: rgba(255,255,255,0.35); }
+.instaladoBadge {
+  font-size: 12px; font-weight: 700; color: #fff;
+  background: rgba(255,255,255,0.2); padding: 6px 12px;
+  border-radius: 6px; white-space: nowrap;
+}
 
 /* ===== PANTALLA BÚSQUEDA ===== */
 .searchScreen {
