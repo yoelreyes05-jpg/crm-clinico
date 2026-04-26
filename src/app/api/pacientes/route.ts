@@ -42,11 +42,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // Admin ve todos los pacientes
+    // Admin ve todos los pacientes activos
     if (auth.rol === "admin") {
       const { data, error } = await supabase
         .from("pacientes")
         .select("*")
+        .eq("estado", true)
         .order("nombre_completo", { ascending: true });
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -94,6 +95,7 @@ export async function GET(request: NextRequest) {
       .from("pacientes")
       .select("*")
       .in("id", patientIds)
+      .eq("estado", true)
       .order("nombre_completo", { ascending: true });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
