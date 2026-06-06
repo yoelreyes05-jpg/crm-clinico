@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Save, Printer, Search, X, Plus, Trash2 } from "lucide-react";
 import styles from "./ginecologia.module.css";
+
+// ─── Interfaces ──────────────────────────────────────────────
 
 interface Paciente {
   id: string;
@@ -22,9 +24,14 @@ interface ControlPrenatal {
   peso: string;
   ta: string;
   altura_uterina: string;
+  presentacion: string;
   fcc_mov: string;
   edema: boolean;
   varice: boolean;
+  proteinuria: string;
+  hemoglobina_ctrl: string;
+  proximo_control: string;
+  observaciones: string;
 }
 
 const controlVacio = (id: number): ControlPrenatal => ({
@@ -34,10 +41,17 @@ const controlVacio = (id: number): ControlPrenatal => ({
   peso: "",
   ta: "",
   altura_uterina: "",
+  presentacion: "cefalica",
   fcc_mov: "",
   edema: false,
   varice: false,
+  proteinuria: "",
+  hemoglobina_ctrl: "",
+  proximo_control: "",
+  observaciones: "",
 });
+
+// ─── Utilidades ─────────────────────────────────────────────
 
 const calcularEdad = (fecha: string) => {
   if (!fecha) return "";
@@ -56,6 +70,11 @@ const calcularFPP = (fum: string): string => {
   return d.toISOString().split("T")[0];
 };
 
+const fmtFecha = (f: string | null | undefined) =>
+  f ? new Date(f + "T12:00").toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+
+// ─── Componente principal ─────────────────────────────────────
+
 export default function HistorialGinecologiaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -69,12 +88,10 @@ export default function HistorialGinecologiaPage() {
   const [enviado, setEnviado] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  /* ---- Historiales existentes del paciente ---- */
   const [historialExistente, setHistorialExistente] = useState<any[]>([]);
   const [cargandoHistoriales, setCargandoHistoriales] = useState(false);
 
-  /* ---- Antecedentes ---- */
+  // ── Antecedentes patológicos (GINECOLOGÍA — NO MODIFICAR) ──
   const [antecedentes, setAntecedentes] = useState({
     embarazo: false,
     tbc_pulmonar: false,
@@ -87,27 +104,92 @@ export default function HistorialGinecologiaPage() {
     antecedentes_familiares: "",
   });
 
-  /* ---- Exámenes / Datos iniciales ---- */
+  // ── Fórmula obstétrica ──
+  const [formula, setFormula] = useState({ g: "", p: "", a: "", c: "", v: "" });
+
+  // ── Historial obstétrico previo ──
+  const [histObstetrico, setHistObstetrico] = useState({
+    partos_vaginales: "",
+    ultimo_parto_fecha: "",
+    ultimo_rn_peso_gr: "",
+    antec_rn_macrosomico: false,
+    antec_rn_bajo_peso: false,
+    antec_mortalidad_perinatal: false,
+    antec_preeclampsia: false,
+  });
+
+  // ── Datos del embarazo actual ──
+  const [embarazoActual, setEmbarazoActual] = useState({
+    tipo_embarazo: "unico",
+    planificado: "" as "" | "true" | "false",
+    edad_gestacional_ingreso: "",
+    fum: "",
+    fpp: "",
+  });
+
+  // ── Exámenes iniciales (CLAP completo) ──
   const [examenes, setExamenes] = useState({
     ta_inicial: "",
     vdrl: "",
     hb: "",
-    tipo_sangre: "",
-    fum: "",
-    fpp: "",
-    dudas: "",
+    hematocrito: "",
+    plaquetas: "",
+    grupo_rh: "",
+    hiv: "",
+    glucemia_ayunas: "",
+    hepatitis_b: "",
+    toxoplasma: "",
+    urocultivo: "",
+    estreptococo_b: "",
     antitetanicas: "",
   });
 
-  /* ---- Controles prenatales (hasta 12) ---- */
+  // ── Controles prenatales ──
   const [controles, setControles] = useState<ControlPrenatal[]>([
-    controlVacio(1),
-    controlVacio(2),
-    controlVacio(3),
-    controlVacio(4),
+    controlVacio(1), controlVacio(2), controlVacio(3), controlVacio(4),
   ]);
 
-  /* ---- Datos clínicos generales ---- */
+  // ── Datos del parto ──
+  const [parto, setParto] = useState({
+    parto_fecha: "",
+    parto_tipo: "",
+    parto_inicio: "",
+    parto_semanas: "",
+    ruptura_membranas: "",
+    parto_duracion_horas: "",
+    anestesia: "",
+    episiotomia: false,
+    desgarro: "",
+    hemorragia_postparto: false,
+    parto_indicacion_cesarea: "",
+    parto_complicaciones: "",
+  });
+
+  // ── Recién nacido ──
+  const [rn, setRn] = useState({
+    rn_sexo: "",
+    rn_peso_gr: "",
+    rn_talla_cm: "",
+    rn_perimetro_cefalico: "",
+    rn_apgar_1: "",
+    rn_apgar_5: "",
+    rn_reanimacion: false,
+    rn_malformaciones: "",
+    rn_lactancia_materna: false,
+    rn_ingreso_uci: false,
+    rn_observaciones: "",
+  });
+
+  // ── Puerperio ──
+  const [puerperio, setPuerperio] = useState({
+    puerperio_estado: "",
+    puerperio_complicaciones: "",
+    puerperio_anticonceptivo: "",
+    alta_fecha: "",
+    alta_observaciones: "",
+  });
+
+  // ── Clínico general ──
   const [clinico, setCli] = useState({
     motivo_consulta: "",
     diagnostico_principal: "",
@@ -118,24 +200,33 @@ export default function HistorialGinecologiaPage() {
     presion_diastolica: "",
   });
 
+  // ─── Effects ──────────────────────────────────────────────
+
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated || usuario?.rol !== "medico") { router.push("/login"); return; }
     cargarPacientes().then(() => {
-      // Si viene paciente por URL, cargar sus historiales automáticamente
-      const pacienteParam = searchParams.get("paciente");
-      if (pacienteParam) {
-        cargarHistorialesGine(pacienteParam);
-      }
+      const pid = searchParams.get("paciente");
+      if (pid) cargarHistorialesGine(pid);
     });
   }, [isAuthenticated, usuario, authLoading]);
 
-  // Calcular FPP automáticamente al cambiar FUM
   useEffect(() => {
-    if (examenes.fum) {
-      setExamenes(prev => ({ ...prev, fpp: calcularFPP(examenes.fum) }));
+    if (embarazoActual.fum) {
+      setEmbarazoActual(prev => ({ ...prev, fpp: calcularFPP(embarazoActual.fum) }));
     }
-  }, [examenes.fum]);
+  }, [embarazoActual.fum]);
+
+  useEffect(() => {
+    const p = parseInt(formula.p) || 0;
+    const a = parseInt(formula.a) || 0;
+    const c = parseInt(formula.c) || 0;
+    if (formula.p || formula.a || formula.c) {
+      setFormula(prev => ({ ...prev, g: String(p + a + c + 1) }));
+    }
+  }, [formula.p, formula.a, formula.c]);
+
+  // ─── Carga de datos ────────────────────────────────────────
 
   const cargarPacientes = async () => {
     try {
@@ -145,11 +236,13 @@ export default function HistorialGinecologiaPage() {
         const d = await res.json();
         const lista = d.data || [];
         setPacientes(lista);
-        // Si hay paciente pre-seleccionado en URL, mostrar su nombre
-        const pacienteParam = searchParams.get("paciente");
-        if (pacienteParam) {
-          const p = lista.find((x: any) => x.id === pacienteParam);
-          if (p) setSearchTerm(p.nombre_completo);
+        const pid = searchParams.get("paciente");
+        if (pid) {
+          const p = lista.find((x: any) => x.id === pid);
+          if (p) {
+            setSearchTerm(p.nombre_completo);
+            if (p.tipo_sangre) setExamenes(prev => ({ ...prev, grupo_rh: p.tipo_sangre }));
+          }
         }
       }
     } finally { setLoading(false); }
@@ -162,9 +255,11 @@ export default function HistorialGinecologiaPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) { const d = await res.json(); setHistorialExistente(d.data || []); }
-      else { setHistorialExistente([]); }
+      else setHistorialExistente([]);
     } finally { setCargandoHistoriales(false); }
   };
+
+  // ─── Handlers ─────────────────────────────────────────────
 
   const pacientesFiltrados = pacientes.filter(p =>
     p.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -174,7 +269,7 @@ export default function HistorialGinecologiaPage() {
   const paciente = pacientes.find(p => p.id === pacienteId);
 
   const agregarControl = () => {
-    if (controles.length >= 12) return;
+    if (controles.length >= 14) return;
     setControles(prev => [...prev, controlVacio(prev.length + 1)]);
   };
 
@@ -198,20 +293,33 @@ export default function HistorialGinecologiaPage() {
 
     try {
       setEnviado(true);
+      const payload = {
+        paciente_id: pacienteId,
+        ...clinico,
+        ...antecedentes,
+        formula_g: formula.g ? parseInt(formula.g) : null,
+        formula_p: formula.p ? parseInt(formula.p) : null,
+        formula_a: formula.a ? parseInt(formula.a) : null,
+        formula_c: formula.c ? parseInt(formula.c) : null,
+        formula_v: formula.v ? parseInt(formula.v) : null,
+        ...histObstetrico,
+        ...embarazoActual,
+        planificado: embarazoActual.planificado === "true" ? true : embarazoActual.planificado === "false" ? false : null,
+        ...examenes,
+        controles_prenatales: controles,
+        ...parto,
+        ...rn,
+        ...puerperio,
+      };
+
       const res = await fetch("/api/historiales/ginecologia", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          paciente_id: pacienteId,
-          ...clinico,
-          ...antecedentes,
-          ...examenes,
-          controles_prenatales: controles,
-        }),
+        body: JSON.stringify(payload),
       });
       const result = await res.json();
       if (res.ok) {
-        setSuccessMsg("Ficha ginecológica guardada exitosamente");
+        setSuccessMsg("Ficha ginecológica obstétrica guardada exitosamente");
         setTimeout(() => router.push("/dashboard/mis-pacientes"), 1800);
       } else {
         setErrorMsg(result.error || "Error al guardar");
@@ -220,13 +328,23 @@ export default function HistorialGinecologiaPage() {
     finally { setEnviado(false); }
   };
 
+  // ─── Impresión ────────────────────────────────────────────
+
   const handlePrint = () => {
     if (!paciente) return;
     const w = window.open("", "_blank");
     if (!w) return;
 
-    const antList = [
-      ["Embarazo", antecedentes.embarazo],
+    const formulaStr = [
+      formula.g ? `G${formula.g}` : "",
+      formula.p ? `P${formula.p}` : "",
+      formula.a ? `A${formula.a}` : "",
+      formula.c ? `C${formula.c}` : "",
+      formula.v ? `V${formula.v}` : "",
+    ].filter(Boolean).join(" ");
+
+    const antList: [string, boolean][] = [
+      ["Embarazo previo", antecedentes.embarazo],
       ["TBC Pulmonar", antecedentes.tbc_pulmonar],
       ["Hipertensión", antecedentes.hipertension],
       ["Gemelares", antecedentes.gemelares],
@@ -234,73 +352,79 @@ export default function HistorialGinecologiaPage() {
       ["HTA Crónica", antecedentes.hipertension_cronica],
       ["Cir. Pélvico-Uterina", antecedentes.cirugia_pelvico_uterina],
       ["Infertilidad", antecedentes.infertilidad],
+      ["Preeclampsia prev.", histObstetrico.antec_preeclampsia],
+      ["RN Macrosómico", histObstetrico.antec_rn_macrosomico],
+      ["RN Bajo Peso", histObstetrico.antec_rn_bajo_peso],
+      ["Mort. Perinatal", histObstetrico.antec_mortalidad_perinatal],
     ];
 
-    const controlesHtml = controles.map((c, i) => `
+    const controlesConFecha = controles.filter(c => c.fecha);
+    const controlesHtml = controlesConFecha.map((c, i) => `
       <tr>
         <td style="text-align:center;background:#f8fafc">${i + 1}</td>
-        <td>${c.fecha || ""}</td>
+        <td>${fmtFecha(c.fecha)}</td>
         <td style="text-align:center">${c.edad_gestacional || ""}</td>
         <td style="text-align:center">${c.peso || ""}</td>
         <td style="text-align:center">${c.ta || ""}</td>
         <td style="text-align:center">${c.altura_uterina || ""}</td>
+        <td style="text-align:center">${c.presentacion || ""}</td>
         <td style="text-align:center">${c.fcc_mov || ""}</td>
         <td style="text-align:center">${c.edema ? "Sí" : "No"}</td>
         <td style="text-align:center">${c.varice ? "Sí" : "No"}</td>
+        <td style="text-align:center">${c.proteinuria || "—"}</td>
+        <td>${c.observaciones || ""}</td>
       </tr>`).join("");
 
-    // Rellenar hasta 12 filas
-    const filasFaltantes = 12 - controles.length;
+    const filasFaltantes = Math.max(0, 12 - controlesConFecha.length);
     const filasVacias = Array(filasFaltantes).fill(0).map((_, i) => `
       <tr>
-        <td style="text-align:center;background:#f8fafc">${controles.length + i + 1}</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        <td style="text-align:center;background:#f8fafc">${controlesConFecha.length + i + 1}</td>
+        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
       </tr>`).join("");
 
     w.document.write(`<!DOCTYPE html><html lang="es"><head>
       <meta charset="UTF-8">
-      <title>Ficha Ginecológica — ${paciente.nombre_completo}</title>
+      <title>Historia Clínica Perinatal — ${paciente.nombre_completo}</title>
       <style>
-        @page { size: letter; margin: 12mm 10mm; }
+        @page { size: letter; margin: 10mm 8mm; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; font-size: 9px; color: #111; line-height: 1.3; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0369a1; padding-bottom: 6px; margin-bottom: 8px; }
-        .clinic h1 { font-size: 14px; color: #0369a1; margin: 0; }
-        .clinic p { font-size: 9px; color: #555; }
-        .badge { background: #0369a1; color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; text-align: center; }
-        .info-paciente { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; background: #f0f7ff; border: 1px solid #bae0ff; padding: 6px 8px; border-radius: 4px; margin-bottom: 8px; }
-        .info-item label { display: block; font-size: 7.5px; color: #555; text-transform: uppercase; font-weight: bold; }
-        .info-item span { font-size: 9.5px; font-weight: bold; }
-        .section-title { background: #0369a1; color: white; padding: 3px 8px; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; margin: 7px 0 4px; border-radius: 2px; }
-        .ant-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; margin-bottom: 4px; }
-        .ant-item { display: flex; align-items: center; gap: 4px; border: 1px solid #ddd; padding: 3px 6px; border-radius: 3px; font-size: 9px; }
-        .ant-item.si { border-color: #0369a1; background: #e0f2fe; color: #0369a1; font-weight: bold; }
-        .ant-check { width: 9px; height: 9px; border: 1.5px solid currentColor; display: inline-flex; align-items: center; justify-content: center; border-radius: 1px; font-size: 7px; flex-shrink:0; }
-        .examenes-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 4px; }
-        .exam-item { border-bottom: 1px solid #ddd; padding: 2px 0 3px; }
-        .exam-item label { display: block; font-size: 7.5px; color: #777; text-transform: uppercase; font-weight: bold; }
-        .exam-item span { font-size: 10px; font-weight: bold; min-height: 12px; display: block; }
-        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
-        .field-line { border-bottom: 1px solid #ddd; padding: 2px 0 3px; margin-bottom: 3px; }
-        .field-line label { font-size: 7.5px; color: #777; text-transform: uppercase; font-weight: bold; display: block; }
-        .field-line span { font-size: 9.5px; min-height: 13px; display: block; }
-        table { width: 100%; border-collapse: collapse; font-size: 8px; }
-        th { background: #0369a1; color: white; padding: 3px 4px; text-align: center; font-size: 7.5px; font-weight: bold; white-space: nowrap; }
-        td { border: 1px solid #d1d5db; padding: 3px 4px; height: 16px; }
-        tr:nth-child(even) td { background: #f9fafb; }
-        .footer { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-        .firma { text-align: center; padding-top: 28px; border-top: 1px solid #333; font-size: 8px; color: #555; }
-        .text-block { border: 1px solid #ddd; padding: 4px 6px; min-height: 20px; border-radius: 2px; font-size: 9px; margin-top: 2px; }
+        body { font-family: Arial, sans-serif; font-size: 8.5px; color: #111; line-height: 1.3; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #be185d; padding-bottom: 5px; margin-bottom: 7px; }
+        .clinic h1 { font-size: 13px; color: #be185d; }
+        .clinic p { font-size: 8px; color: #555; }
+        .badge { background: #be185d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; text-align: center; white-space: nowrap; }
+        .info-paciente { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; background: #fdf2f8; border: 1px solid #fbcfe8; padding: 5px 7px; border-radius: 4px; margin-bottom: 7px; }
+        .info-item label { display: block; font-size: 7px; color: #9d174d; text-transform: uppercase; font-weight: bold; }
+        .info-item span { font-size: 9px; font-weight: bold; }
+        .section-title { background: #be185d; color: white; padding: 2px 7px; font-size: 8.5px; font-weight: bold; text-transform: uppercase; margin: 6px 0 3px; border-radius: 2px; }
+        .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; margin-bottom: 3px; }
+        .exam-item { border-bottom: 1px solid #ddd; padding: 2px 0; }
+        .exam-item label { display: block; font-size: 7px; color: #777; text-transform: uppercase; font-weight: bold; }
+        .exam-item span { font-size: 9px; font-weight: bold; min-height: 11px; display: block; }
+        .ant-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; margin-bottom: 3px; }
+        .ant-item { display: flex; align-items: center; gap: 3px; border: 1px solid #ddd; padding: 2px 5px; border-radius: 2px; font-size: 8px; }
+        .ant-item.si { border-color: #be185d; background: #fce7f3; color: #9d174d; font-weight: bold; }
+        .ant-check { width: 8px; height: 8px; border: 1.5px solid currentColor; display: inline-flex; align-items: center; justify-content: center; border-radius: 1px; font-size: 6.5px; flex-shrink:0; }
+        table { width: 100%; border-collapse: collapse; font-size: 7.5px; }
+        th { background: #be185d; color: white; padding: 2px 3px; text-align: center; font-size: 7px; white-space: nowrap; }
+        td { border: 1px solid #d1d5db; padding: 2px 3px; height: 14px; }
+        tr:nth-child(even) td { background: #fdf9f0; }
+        .field-line { border-bottom: 1px solid #e5e7eb; padding: 2px 0; margin-bottom: 2px; }
+        .field-line label { font-size: 7px; color: #777; text-transform: uppercase; font-weight: bold; display: block; }
+        .field-line span { font-size: 8.5px; min-height: 12px; display: block; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .footer { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .firma { text-align: center; padding-top: 22px; border-top: 1px solid #333; font-size: 7.5px; color: #555; }
       </style>
     </head><body>
 
     <div class="header">
       <div class="clinic">
-        <h1>🏥 Ficha Ginecológica Obstétrica</h1>
-        <p>Dr./Dra. ${usuario?.nombre_completo || ""} &nbsp;·&nbsp; Especialidad: Ginecología</p>
-        <p>Fecha de emisión: ${new Date().toLocaleDateString("es-ES", { day:"2-digit", month:"long", year:"numeric" })}</p>
+        <h1>🏥 Historia Clínica Perinatal</h1>
+        <p>Dr./Dra. ${usuario?.nombre_completo || ""} &nbsp;·&nbsp; Ginecología / Obstetricia &nbsp;·&nbsp; Estándar CLAP/SMR (OPS-OMS)</p>
+        <p>Fecha: ${new Date().toLocaleDateString("es-ES", { day:"2-digit", month:"long", year:"numeric" })}</p>
       </div>
-      <div class="badge">GINECOLOGÍA<br>OBSTETRICIA</div>
+      <div class="badge">OBSTETRICIA<br>PRENATAL</div>
     </div>
 
     <div class="info-paciente">
@@ -308,59 +432,95 @@ export default function HistorialGinecologiaPage() {
       <div class="info-item"><label>Cédula</label><span>${paciente.cedula}</span></div>
       <div class="info-item"><label>Edad</label><span>${calcularEdad(paciente.fecha_nacimiento)}</span></div>
       <div class="info-item"><label>Teléfono</label><span>${paciente.telefono || "—"}</span></div>
+      <div class="info-item"><label>FUM</label><span>${fmtFecha(embarazoActual.fum)}</span></div>
+      <div class="info-item"><label>FPP</label><span>${fmtFecha(embarazoActual.fpp)}</span></div>
+      <div class="info-item"><label>Tipo embarazo</label><span style="text-transform:capitalize">${embarazoActual.tipo_embarazo || "Único"}</span></div>
+      <div class="info-item"><label>EG al ingreso</label><span>${embarazoActual.edad_gestacional_ingreso || "—"}</span></div>
     </div>
+
+    ${formulaStr ? `
+    <div style="margin-bottom:5px;padding:3px 8px;background:#fdf2f8;border-radius:4px;display:inline-block">
+      <span style="font-size:8px;color:#9d174d;font-weight:bold;text-transform:uppercase">Fórmula obstétrica:</span>
+      <span style="font-size:14px;font-weight:bold;color:#be185d;margin-left:8px">${formulaStr}</span>
+      ${histObstetrico.partos_vaginales ? `<span style="font-size:8px;color:#555;margin-left:8px">(${histObstetrico.partos_vaginales} vaginales)</span>` : ""}
+    </div>` : ""}
 
     <div class="section-title">Antecedentes Patológicos</div>
     <div class="ant-grid">
       ${antList.map(([lbl, val]) => `
         <div class="ant-item ${val ? "si" : ""}">
-          <div class="ant-check">${val ? "✓" : ""}</div>
-          ${lbl}
+          <div class="ant-check">${val ? "✓" : ""}</div>${lbl}
         </div>`).join("")}
     </div>
-    ${antecedentes.antecedentes_familiares ? `
-      <div class="field-line"><label>Antecedentes familiares</label><span>${antecedentes.antecedentes_familiares}</span></div>` : ""}
+    ${antecedentes.antecedentes_familiares ? `<div class="field-line"><label>Antecedentes familiares</label><span>${antecedentes.antecedentes_familiares}</span></div>` : ""}
 
-    <div class="section-title">Datos Iniciales y Exámenes</div>
-    <div class="examenes-grid">
-      <div class="exam-item"><label>T.A. Inicial</label><span>${examenes.ta_inicial || "—"}</span></div>
-      <div class="exam-item"><label>VDRL</label><span>${examenes.vdrl || "—"}</span></div>
-      <div class="exam-item"><label>Hb (Hemoglobina)</label><span>${examenes.hb || "—"}</span></div>
-      <div class="exam-item"><label>Tipo de Sangre</label><span>${examenes.tipo_sangre || paciente.tipo_sangre || "—"}</span></div>
-      <div class="exam-item"><label>FUM</label><span>${examenes.fum ? new Date(examenes.fum + "T12:00").toLocaleDateString("es-ES") : "—"}</span></div>
-      <div class="exam-item"><label>FPP</label><span>${examenes.fpp ? new Date(examenes.fpp + "T12:00").toLocaleDateString("es-ES") : "—"}</span></div>
-      <div class="exam-item"><label>Antitetánicas</label><span>${examenes.antitetanicas || "—"}</span></div>
-      <div class="exam-item"><label>Motivo Consulta</label><span>${clinico.motivo_consulta || "—"}</span></div>
+    <div class="section-title">Exámenes de Laboratorio Iniciales (CLAP)</div>
+    <div class="grid4">
+      <div class="exam-item"><label>T.A. Inicial</label><span>${examenes.ta_inicial||"—"}</span></div>
+      <div class="exam-item"><label>VDRL / RPR</label><span>${examenes.vdrl||"—"}</span></div>
+      <div class="exam-item"><label>Hemoglobina</label><span>${examenes.hb||"—"}</span></div>
+      <div class="exam-item"><label>Hematocrito</label><span>${examenes.hematocrito||"—"}</span></div>
+      <div class="exam-item"><label>Grupo / Rh</label><span>${examenes.grupo_rh||"—"}</span></div>
+      <div class="exam-item"><label>VIH</label><span>${examenes.hiv||"—"}</span></div>
+      <div class="exam-item"><label>Glucemia ayunas</label><span>${examenes.glucemia_ayunas||"—"}</span></div>
+      <div class="exam-item"><label>Hepatitis B</label><span>${examenes.hepatitis_b||"—"}</span></div>
+      <div class="exam-item"><label>Toxoplasma</label><span>${examenes.toxoplasma||"—"}</span></div>
+      <div class="exam-item"><label>Urocultivo</label><span>${examenes.urocultivo||"—"}</span></div>
+      <div class="exam-item"><label>Estreptococo B</label><span>${examenes.estreptococo_b||"—"}</span></div>
+      <div class="exam-item"><label>Antitetánicas</label><span>${examenes.antitetanicas||"—"}</span></div>
     </div>
 
-    <div class="section-title">Controles Prenatales (12 Controles)</div>
+    <div class="section-title">Controles Prenatales</div>
     <table>
       <thead>
         <tr>
-          <th>#</th>
-          <th>Fecha</th>
-          <th>Edad Gestacional</th>
-          <th>Peso (kg)</th>
-          <th>T.A.</th>
-          <th>Alt. Uterina</th>
-          <th>FCC / MOV</th>
-          <th>Edema</th>
-          <th>Várice</th>
+          <th>#</th><th>Fecha</th><th>EG</th><th>Peso</th><th>T.A.</th>
+          <th>A.U.</th><th>Presentación</th><th>FCC/MOV</th>
+          <th>Edema</th><th>Várice</th><th>Proteinuria</th><th>Observaciones</th>
         </tr>
       </thead>
-      <tbody>
-        ${controlesHtml}
-        ${filasVacias}
-      </tbody>
+      <tbody>${controlesHtml}${filasVacias}</tbody>
     </table>
 
-    <div class="row2" style="margin-top:8px">
+    ${parto.parto_fecha || parto.parto_tipo ? `
+    <div class="section-title">Datos del Parto</div>
+    <div class="grid4">
+      <div class="exam-item"><label>Fecha / Hora</label><span>${parto.parto_fecha ? new Date(parto.parto_fecha).toLocaleString("es-ES") : "—"}</span></div>
+      <div class="exam-item"><label>Tipo</label><span>${parto.parto_tipo||"—"}</span></div>
+      <div class="exam-item"><label>Inicio T. Parto</label><span>${parto.parto_inicio||"—"}</span></div>
+      <div class="exam-item"><label>Semanas</label><span>${parto.parto_semanas||"—"}</span></div>
+      <div class="exam-item"><label>Ruptura membranas</label><span>${parto.ruptura_membranas||"—"}</span></div>
+      <div class="exam-item"><label>Anestesia</label><span>${parto.anestesia||"—"}</span></div>
+      <div class="exam-item"><label>Episiotomía</label><span>${parto.episiotomia ? "Sí" : "No"}</span></div>
+      <div class="exam-item"><label>Desgarro</label><span>${parto.desgarro||"—"}</span></div>
+    </div>
+    ${parto.parto_complicaciones ? `<div class="field-line"><label>Complicaciones</label><span>${parto.parto_complicaciones}</span></div>` : ""}
+    ` : ""}
+
+    ${rn.rn_peso_gr || rn.rn_apgar_1 ? `
+    <div class="section-title">Recién Nacido</div>
+    <div class="grid4">
+      <div class="exam-item"><label>Sexo</label><span>${rn.rn_sexo === "M" ? "Masculino" : rn.rn_sexo === "F" ? "Femenino" : "—"}</span></div>
+      <div class="exam-item"><label>Peso (gr)</label><span>${rn.rn_peso_gr||"—"}</span></div>
+      <div class="exam-item"><label>Talla (cm)</label><span>${rn.rn_talla_cm||"—"}</span></div>
+      <div class="exam-item"><label>PC (cm)</label><span>${rn.rn_perimetro_cefalico||"—"}</span></div>
+      <div class="exam-item"><label>Apgar 1'/5'</label><span>${rn.rn_apgar_1||"—"} / ${rn.rn_apgar_5||"—"}</span></div>
+      <div class="exam-item"><label>Reanimación</label><span>${rn.rn_reanimacion ? "Sí" : "No"}</span></div>
+      <div class="exam-item"><label>Lactancia materna</label><span>${rn.rn_lactancia_materna ? "Sí" : "No"}</span></div>
+      <div class="exam-item"><label>UCI Neonatal</label><span>${rn.rn_ingreso_uci ? "Sí" : "No"}</span></div>
+    </div>
+    ${rn.rn_malformaciones ? `<div class="field-line"><label>Malformaciones / Obs.</label><span>${rn.rn_malformaciones}</span></div>` : ""}
+    ` : ""}
+
+    <div class="section-title">Diagnóstico y Tratamiento</div>
+    <div class="grid2">
       <div>
-        <div class="field-line"><label>Diagnóstico Principal</label><span>${clinico.diagnostico_principal || ""}</span></div>
-        <div class="field-line"><label>Plan de Tratamiento</label><span>${clinico.plan_tratamiento || ""}</span></div>
+        <div class="field-line"><label>Diagnóstico principal</label><span>${clinico.diagnostico_principal||""}</span></div>
+        <div class="field-line"><label>Plan de tratamiento</label><span>${clinico.plan_tratamiento||""}</span></div>
       </div>
       <div>
-        <div class="field-line"><label>Dudas / Observaciones</label><span>${examenes.dudas || clinico.observaciones || ""}</span></div>
+        <div class="field-line"><label>Observaciones</label><span>${clinico.observaciones||""}</span></div>
+        ${puerperio.puerperio_anticonceptivo ? `<div class="field-line"><label>Anticonceptivo posparto</label><span>${puerperio.puerperio_anticonceptivo}</span></div>` : ""}
       </div>
     </div>
 
@@ -375,9 +535,16 @@ export default function HistorialGinecologiaPage() {
     setTimeout(() => w.print(), 300);
   };
 
+  // ─── Render ────────────────────────────────────────────────
+
   if (authLoading || loading) {
     return <div className={styles.loading}><div className={styles.spinner} /><p>Cargando...</p></div>;
   }
+
+  const inputCls = styles.input;
+  const selCls = styles.select;
+  const labelCls = styles.label;
+  const fgCls = styles.fieldGroup;
 
   return (
     <div className={styles.container}>
@@ -385,8 +552,8 @@ export default function HistorialGinecologiaPage() {
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => router.back()}><ArrowLeft size={18} /><span>Volver</span></button>
         <div>
-          <h1>Ficha Ginecológica Obstétrica</h1>
-          <p className={styles.subtitle}>Registro completo · Ginecología</p>
+          <h1>Historia Clínica Perinatal</h1>
+          <p className={styles.subtitle}>Ginecología / Obstetricia · Estándar CLAP/SMR (OPS-OMS)</p>
         </div>
         <div className={styles.headerActions}>
           {pacienteId && (
@@ -402,7 +569,7 @@ export default function HistorialGinecologiaPage() {
 
       <form onSubmit={handleSubmit} className={styles.form}>
 
-        {/* ===== BUSCAR PACIENTE ===== */}
+        {/* ══ SELECCIONAR PACIENTE ══ */}
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>👤 Seleccionar Paciente</h2>
           <div className={styles.searchBox}>
@@ -415,12 +582,24 @@ export default function HistorialGinecologiaPage() {
               onChange={e => { setSearchTerm(e.target.value); setShowResults(true); }}
               onFocus={() => setShowResults(true)}
             />
-            {searchTerm && <button type="button" className={styles.clearBtn} onClick={() => { setSearchTerm(""); setPacienteId(""); setShowResults(false); }}><X size={14} /></button>}
+            {searchTerm && (
+              <button type="button" className={styles.clearBtn}
+                onClick={() => { setSearchTerm(""); setPacienteId(""); setShowResults(false); }}>
+                <X size={14} />
+              </button>
+            )}
           </div>
           {showResults && searchTerm && (
             <div className={styles.searchResults}>
               {pacientesFiltrados.slice(0, 6).map(p => (
-                <div key={p.id} className={styles.searchResult} onClick={() => { setPacienteId(p.id); setSearchTerm(p.nombre_completo); setShowResults(false); cargarHistorialesGine(p.id); }}>
+                <div key={p.id} className={styles.searchResult}
+                  onClick={() => {
+                    setPacienteId(p.id);
+                    setSearchTerm(p.nombre_completo);
+                    setShowResults(false);
+                    cargarHistorialesGine(p.id);
+                    if (p.tipo_sangre) setExamenes(prev => ({ ...prev, grupo_rh: p.tipo_sangre! }));
+                  }}>
                   <strong>{p.nombre_completo}</strong>
                   <span>Cédula: {p.cedula}</span>
                 </div>
@@ -440,61 +619,58 @@ export default function HistorialGinecologiaPage() {
 
         {paciente && (<>
 
-          {/* ===== FICHAS EXISTENTES ===== */}
+          {/* ══ FICHAS EXISTENTES ══ */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>📂 Fichas Ginecológicas Registradas</h2>
             {cargandoHistoriales && <p style={{ fontSize: 13, color: "var(--text-muted)" }}>Cargando registros...</p>}
             {!cargandoHistoriales && historialExistente.length === 0 && (
               <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic" }}>
-                No hay fichas ginecológicas registradas para este paciente. Complete el formulario abajo para crear la primera.
+                No hay fichas registradas para este paciente. Complete el formulario para crear la primera.
               </p>
             )}
             {!cargandoHistoriales && historialExistente.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {historialExistente.map((h: any, i: number) => (
-                  <div key={h.id} style={{
-                    padding: "10px 14px",
-                    background: "var(--primary-bg)",
-                    border: "1px solid var(--border-hover)",
-                    borderRadius: 8,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>
-                        Ficha #{historialExistente.length - i} — {h.diagnostico_principal}
-                      </span>
-                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                        {new Date(h.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
-                      </span>
-                    </div>
-                    {h.motivo_consulta && (
-                      <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-                        Motivo: {h.motivo_consulta}
-                      </span>
-                    )}
-                    {h.historiales_ginecologia?.[0] && (
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", gap: 10, flexWrap: "wrap" }}>
-                        {h.historiales_ginecologia[0].fum && <span>FUM: {h.historiales_ginecologia[0].fum}</span>}
-                        {h.historiales_ginecologia[0].fpp && <span>FPP: {h.historiales_ginecologia[0].fpp}</span>}
-                        {h.historiales_ginecologia[0].controles_prenatales?.length > 0 &&
-                          <span>Controles: {h.historiales_ginecologia[0].controles_prenatales.length}</span>
-                        }
+                {historialExistente.map((h: any, i: number) => {
+                  const g = h.historiales_ginecologia?.[0];
+                  return (
+                    <div key={h.id} style={{ padding: "10px 14px", background: "var(--primary-bg)", border: "1px solid var(--border-hover)", borderRadius: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontWeight: 700, fontSize: 13 }}>
+                          Ficha #{historialExistente.length - i} — {h.diagnostico_principal}
+                        </span>
+                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                          {new Date(h.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {h.motivo_consulta && <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Motivo: {h.motivo_consulta}</span>}
+                      {g && (
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", gap: 10, flexWrap: "wrap", marginTop: 3 }}>
+                          {g.fum && <span>FUM: {fmtFecha(g.fum)}</span>}
+                          {g.fpp && <span>FPP: {fmtFecha(g.fpp)}</span>}
+                          {(g.formula_g || g.formula_p) && (
+                            <span>
+                              {[g.formula_g && `G${g.formula_g}`, g.formula_p && `P${g.formula_p}`, g.formula_a && `A${g.formula_a}`, g.formula_c && `C${g.formula_c}`].filter(Boolean).join(" ")}
+                            </span>
+                          )}
+                          {g.controles_prenatales?.length > 0 && <span>Controles: {g.controles_prenatales.length}</span>}
+                          {g.parto_tipo && <span>Parto: {g.parto_tipo}</span>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
               <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0 }}>
-                ↓ Complete el formulario a continuación para agregar una nueva ficha ginecológica
+                ↓ Complete el formulario a continuación para agregar una nueva ficha
               </p>
             </div>
           </div>
 
-          {/* ===== ANTECEDENTES ===== */}
+          {/* ══════════════════════════════════════════════════════
+              ANTECEDENTES PATOLÓGICOS — GINECOLOGÍA (INTACTO)
+          ═══════════════════════════════════════════════════════ */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>📋 Antecedentes Patológicos</h2>
             <div className={styles.antGrid}>
@@ -514,73 +690,253 @@ export default function HistorialGinecologiaPage() {
                 </label>
               ))}
             </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Antecedentes Familiares</label>
-              <input className={styles.input} type="text" placeholder="Describa antecedentes familiares relevantes"
+            <div className={fgCls}>
+              <label className={labelCls}>Antecedentes Familiares</label>
+              <input className={inputCls} type="text" placeholder="Describa antecedentes familiares relevantes"
                 value={antecedentes.antecedentes_familiares}
                 onChange={e => setAntecedentes(prev => ({ ...prev, antecedentes_familiares: e.target.value }))} />
             </div>
           </div>
 
-          {/* ===== EXÁMENES / DATOS INICIALES ===== */}
+          {/* ══════════════════════════════════════════════════════
+              FÓRMULA OBSTÉTRICA — NUEVO
+          ═══════════════════════════════════════════════════════ */}
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>🔬 Datos Iniciales y Exámenes</h2>
-            <div className={styles.grid4}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>T.A. Inicial</label>
-                <input className={styles.input} type="text" placeholder="120/80"
-                  value={examenes.ta_inicial} onChange={e => setExamenes(p => ({ ...p, ta_inicial: e.target.value }))} />
+            <h2 className={styles.cardTitle}>🔢 Fórmula Obstétrica</h2>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
+              G = Gestaciones totales · P = Partos a término · A = Abortos · C = Cesáreas · V = Hijos vivos actualmente
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 16 }}>
+              {(["g","p","a","c","v"] as const).map(k => (
+                <div key={k} className={fgCls}>
+                  <label className={labelCls} style={{ textAlign: "center" }}>
+                    {k.toUpperCase()}
+                    <span style={{ fontWeight: "normal", marginLeft: 4, fontSize: 10 }}>
+                      {k==="g"?"(Total)":k==="p"?"(Partos)":k==="a"?"(Abortos)":k==="c"?"(Cesáreas)":"(Vivos)"}
+                    </span>
+                  </label>
+                  <input
+                    className={inputCls}
+                    type="number"
+                    min="0"
+                    max="20"
+                    placeholder="0"
+                    value={formula[k]}
+                    style={{ textAlign: "center", fontWeight: 700, fontSize: 18 }}
+                    onChange={e => setFormula(prev => ({ ...prev, [k]: e.target.value }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Historial obstétrico previo</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 12 }}>
+              <div className={fgCls}>
+                <label className={labelCls}>Partos vaginales previos</label>
+                <input className={inputCls} type="number" min="0" placeholder="0"
+                  value={histObstetrico.partos_vaginales}
+                  onChange={e => setHistObstetrico(p => ({ ...p, partos_vaginales: e.target.value }))} />
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>VDRL</label>
-                <input className={styles.input} type="text" placeholder="Reactivo / No reactivo"
-                  value={examenes.vdrl} onChange={e => setExamenes(p => ({ ...p, vdrl: e.target.value }))} />
+              <div className={fgCls}>
+                <label className={labelCls}>Fecha último parto</label>
+                <input className={inputCls} type="date"
+                  value={histObstetrico.ultimo_parto_fecha}
+                  onChange={e => setHistObstetrico(p => ({ ...p, ultimo_parto_fecha: e.target.value }))} />
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Hb (Hemoglobina)</label>
-                <input className={styles.input} type="text" placeholder="g/dL"
-                  value={examenes.hb} onChange={e => setExamenes(p => ({ ...p, hb: e.target.value }))} />
+              <div className={fgCls}>
+                <label className={labelCls}>Peso último RN (gr)</label>
+                <input className={inputCls} type="number" min="0" placeholder="ej: 3200"
+                  value={histObstetrico.ultimo_rn_peso_gr}
+                  onChange={e => setHistObstetrico(p => ({ ...p, ultimo_rn_peso_gr: e.target.value }))} />
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Tipo de Sangre</label>
-                <select className={styles.select}
-                  value={examenes.tipo_sangre || paciente.tipo_sangre || ""}
-                  onChange={e => setExamenes(p => ({ ...p, tipo_sangre: e.target.value }))}>
-                  <option value="">Seleccionar</option>
-                  {["O+","O-","A+","A-","B+","B-","AB+","AB-"].map(t => <option key={t}>{t}</option>)}
+            </div>
+            <div className={styles.antGrid} style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
+              {([
+                ["antec_preeclampsia", "Preeclampsia previa"],
+                ["antec_rn_macrosomico", "RN Macrosómico (>4kg)"],
+                ["antec_rn_bajo_peso", "RN Bajo peso (<2.5kg)"],
+                ["antec_mortalidad_perinatal", "Mort. Perinatal previa"],
+              ] as [keyof typeof histObstetrico, string][]).map(([campo, label]) => (
+                <label key={campo} className={`${styles.antItem} ${histObstetrico[campo] ? styles.antItemSi : ""}`}>
+                  <input type="checkbox"
+                    checked={!!histObstetrico[campo]}
+                    onChange={() => setHistObstetrico(p => ({ ...p, [campo]: !p[campo] }))}
+                    className={styles.antCheck} />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════
+              DATOS DEL EMBARAZO ACTUAL
+          ═══════════════════════════════════════════════════════ */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>🤰 Datos del Embarazo Actual</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+              <div className={fgCls}>
+                <label className={labelCls}>FUM (Última Menstruación)</label>
+                <input className={inputCls} type="date"
+                  value={embarazoActual.fum}
+                  onChange={e => setEmbarazoActual(p => ({ ...p, fum: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>FPP (Fecha Probable Parto)</label>
+                <input className={inputCls} type="date"
+                  value={embarazoActual.fpp}
+                  onChange={e => setEmbarazoActual(p => ({ ...p, fpp: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>EG al ingreso</label>
+                <input className={inputCls} type="text" placeholder="ej: 10 sem 3 días"
+                  value={embarazoActual.edad_gestacional_ingreso}
+                  onChange={e => setEmbarazoActual(p => ({ ...p, edad_gestacional_ingreso: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Tipo de embarazo</label>
+                <select className={selCls} value={embarazoActual.tipo_embarazo}
+                  onChange={e => setEmbarazoActual(p => ({ ...p, tipo_embarazo: e.target.value }))}>
+                  <option value="unico">Único</option>
+                  <option value="gemelar">Gemelar</option>
+                  <option value="triple">Triple</option>
                 </select>
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>FUM (Última Menstruación)</label>
-                <input className={styles.input} type="date"
-                  value={examenes.fum} onChange={e => setExamenes(p => ({ ...p, fum: e.target.value }))} />
+              <div className={fgCls}>
+                <label className={labelCls}>¿Embarazo planificado?</label>
+                <select className={selCls} value={embarazoActual.planificado}
+                  onChange={e => setEmbarazoActual(p => ({ ...p, planificado: e.target.value as any }))}>
+                  <option value="">No especificado</option>
+                  <option value="true">Sí</option>
+                  <option value="false">No</option>
+                </select>
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>FPP (Fecha Probable Parto)</label>
-                <input className={styles.input} type="date"
-                  value={examenes.fpp} onChange={e => setExamenes(p => ({ ...p, fpp: e.target.value }))} />
+              <div className={fgCls}>
+                <label className={labelCls}>Motivo de consulta</label>
+                <input className={inputCls} type="text" placeholder="Motivo principal"
+                  value={clinico.motivo_consulta}
+                  onChange={e => setCli(p => ({ ...p, motivo_consulta: e.target.value }))} />
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Antitetánicas</label>
-                <input className={styles.input} type="text" placeholder="Ej: 1ra dosis / completa"
-                  value={examenes.antitetanicas} onChange={e => setExamenes(p => ({ ...p, antitetanicas: e.target.value }))} />
+              <div className={fgCls}>
+                <label className={labelCls}>Peso actual (kg)</label>
+                <input className={inputCls} type="text" placeholder="kg"
+                  value={clinico.peso}
+                  onChange={e => setCli(p => ({ ...p, peso: e.target.value }))} />
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Motivo de Consulta</label>
-                <input className={styles.input} type="text" placeholder="Motivo principal"
-                  value={clinico.motivo_consulta} onChange={e => setCli(p => ({ ...p, motivo_consulta: e.target.value }))} />
+              <div className={fgCls}>
+                <label className={labelCls}>T.A. Inicial</label>
+                <input className={inputCls} type="text" placeholder="120/80"
+                  value={examenes.ta_inicial}
+                  onChange={e => setExamenes(p => ({ ...p, ta_inicial: e.target.value }))} />
               </div>
             </div>
           </div>
 
-          {/* ===== CONTROLES PRENATALES ===== */}
+          {/* ══════════════════════════════════════════════════════
+              EXÁMENES DE LABORATORIO INICIALES — CLAP
+          ═══════════════════════════════════════════════════════ */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>🔬 Exámenes de Laboratorio Iniciales (CLAP)</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+              <div className={fgCls}>
+                <label className={labelCls}>VDRL / RPR</label>
+                <input className={inputCls} type="text" placeholder="Reactivo / No reactivo"
+                  value={examenes.vdrl}
+                  onChange={e => setExamenes(p => ({ ...p, vdrl: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Hemoglobina (g/dL)</label>
+                <input className={inputCls} type="text" placeholder="g/dL"
+                  value={examenes.hb}
+                  onChange={e => setExamenes(p => ({ ...p, hb: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Hematocrito (%)</label>
+                <input className={inputCls} type="text" placeholder="%"
+                  value={examenes.hematocrito}
+                  onChange={e => setExamenes(p => ({ ...p, hematocrito: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Plaquetas (10³/µL)</label>
+                <input className={inputCls} type="text" placeholder="ej: 250"
+                  value={examenes.plaquetas}
+                  onChange={e => setExamenes(p => ({ ...p, plaquetas: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Grupo sanguíneo / Rh</label>
+                <select className={selCls} value={examenes.grupo_rh}
+                  onChange={e => setExamenes(p => ({ ...p, grupo_rh: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  {["O+","O-","A+","A-","B+","B-","AB+","AB-"].map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>VIH</label>
+                <select className={selCls} value={examenes.hiv}
+                  onChange={e => setExamenes(p => ({ ...p, hiv: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="NR">No Reactivo (NR)</option>
+                  <option value="R">Reactivo (R)</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Rechazado">Rechazado</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Glucemia en ayunas (mg/dL)</label>
+                <input className={inputCls} type="text" placeholder="mg/dL"
+                  value={examenes.glucemia_ayunas}
+                  onChange={e => setExamenes(p => ({ ...p, glucemia_ayunas: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Hepatitis B (HBsAg)</label>
+                <select className={selCls} value={examenes.hepatitis_b}
+                  onChange={e => setExamenes(p => ({ ...p, hepatitis_b: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="Negativo">Negativo</option>
+                  <option value="Positivo">Positivo</option>
+                  <option value="Pendiente">Pendiente</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Toxoplasma IgG / IgM</label>
+                <input className={inputCls} type="text" placeholder="ej: IgG+ / IgM-"
+                  value={examenes.toxoplasma}
+                  onChange={e => setExamenes(p => ({ ...p, toxoplasma: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Urocultivo</label>
+                <input className={inputCls} type="text" placeholder="Negativo / Positivo"
+                  value={examenes.urocultivo}
+                  onChange={e => setExamenes(p => ({ ...p, urocultivo: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Estreptococo B (SGB 35-37 sem)</label>
+                <select className={selCls} value={examenes.estreptococo_b}
+                  onChange={e => setExamenes(p => ({ ...p, estreptococo_b: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="Negativo">Negativo</option>
+                  <option value="Positivo">Positivo</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="No realizado">No realizado</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Antitetánicas</label>
+                <input className={inputCls} type="text" placeholder="ej: 1ra dosis / Completa"
+                  value={examenes.antitetanicas}
+                  onChange={e => setExamenes(p => ({ ...p, antitetanicas: e.target.value }))} />
+              </div>
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════
+              CONTROLES PRENATALES — EXPANDIDO
+          ═══════════════════════════════════════════════════════ */}
           <div className={styles.card}>
             <div className={styles.cardTitleRow}>
               <h2 className={styles.cardTitle}>🗓 Controles Prenatales</h2>
-              <span className={styles.controlCount}>{controles.length} / 12</span>
-              {controles.length < 12 && (
+              <span className={styles.controlCount}>{controles.length} / 14</span>
+              {controles.length < 14 && (
                 <button type="button" className={styles.addBtn} onClick={agregarControl}>
-                  <Plus size={14} /> Agregar control
+                  <Plus size={14} /> Agregar
                 </button>
               )}
             </div>
@@ -590,13 +946,18 @@ export default function HistorialGinecologiaPage() {
                   <tr>
                     <th>#</th>
                     <th>Fecha</th>
-                    <th>Edad Gest.</th>
+                    <th>EG</th>
                     <th>Peso (kg)</th>
                     <th>T.A.</th>
-                    <th>Alt. Uterina</th>
+                    <th>A.U. (cm)</th>
+                    <th>Presentación</th>
                     <th>FCC / MOV</th>
                     <th>Edema</th>
                     <th>Várice</th>
+                    <th>Proteinuria</th>
+                    <th>Hb ctrl</th>
+                    <th>Próx. Control</th>
+                    <th>Obs.</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -605,10 +966,20 @@ export default function HistorialGinecologiaPage() {
                     <tr key={c.id}>
                       <td className={styles.tdNum}>{i + 1}</td>
                       <td><input type="date" className={styles.tdInput} value={c.fecha} onChange={e => actualizarControl(i, "fecha", e.target.value)} /></td>
-                      <td><input type="text" className={styles.tdInput} placeholder="Ej: 8 sem" value={c.edad_gestacional} onChange={e => actualizarControl(i, "edad_gestacional", e.target.value)} /></td>
+                      <td><input type="text" className={styles.tdInput} placeholder="10s3d" value={c.edad_gestacional} onChange={e => actualizarControl(i, "edad_gestacional", e.target.value)} /></td>
                       <td><input type="text" className={styles.tdInputSm} placeholder="kg" value={c.peso} onChange={e => actualizarControl(i, "peso", e.target.value)} /></td>
                       <td><input type="text" className={styles.tdInputSm} placeholder="120/80" value={c.ta} onChange={e => actualizarControl(i, "ta", e.target.value)} /></td>
                       <td><input type="text" className={styles.tdInputSm} placeholder="cm" value={c.altura_uterina} onChange={e => actualizarControl(i, "altura_uterina", e.target.value)} /></td>
+                      <td>
+                        <select style={{ fontSize: 11, padding: "1px 2px", border: "1px solid #ddd", borderRadius: 3, width: "100%", minWidth: 80 }}
+                          value={c.presentacion}
+                          onChange={e => actualizarControl(i, "presentacion", e.target.value)}>
+                          <option value="cefalica">Cefálica</option>
+                          <option value="podalica">Podálica</option>
+                          <option value="transversa">Transversa</option>
+                          <option value="indefinida">Indefinida</option>
+                        </select>
+                      </td>
                       <td><input type="text" className={styles.tdInputSm} placeholder="+/+" value={c.fcc_mov} onChange={e => actualizarControl(i, "fcc_mov", e.target.value)} /></td>
                       <td className={styles.tdCheck}>
                         <label className={`${styles.checkToggle} ${c.edema ? styles.checkOn : ""}`}>
@@ -623,6 +994,21 @@ export default function HistorialGinecologiaPage() {
                         </label>
                       </td>
                       <td>
+                        <select style={{ fontSize: 11, padding: "1px 2px", border: "1px solid #ddd", borderRadius: 3, width: "100%" }}
+                          value={c.proteinuria}
+                          onChange={e => actualizarControl(i, "proteinuria", e.target.value)}>
+                          <option value="">—</option>
+                          <option value="negativo">Neg.</option>
+                          <option value="trazas">Trazas</option>
+                          <option value="1+">1+</option>
+                          <option value="2+">2+</option>
+                          <option value="3+">3+</option>
+                        </select>
+                      </td>
+                      <td><input type="text" className={styles.tdInputSm} placeholder="g/dL" value={c.hemoglobina_ctrl} onChange={e => actualizarControl(i, "hemoglobina_ctrl", e.target.value)} /></td>
+                      <td><input type="date" className={styles.tdInput} value={c.proximo_control} onChange={e => actualizarControl(i, "proximo_control", e.target.value)} /></td>
+                      <td><input type="text" className={styles.tdInput} placeholder="notas" value={c.observaciones} onChange={e => actualizarControl(i, "observaciones", e.target.value)} /></td>
+                      <td>
                         {controles.length > 1 && (
                           <button type="button" className={styles.removeBtn} onClick={() => quitarControl(i)}><Trash2 size={13} /></button>
                         )}
@@ -634,29 +1020,264 @@ export default function HistorialGinecologiaPage() {
             </div>
           </div>
 
-          {/* ===== DIAGNÓSTICO / TRATAMIENTO ===== */}
+          {/* ══════════════════════════════════════════════════════
+              DATOS DEL PARTO — NUEVO
+          ═══════════════════════════════════════════════════════ */}
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>📝 Diagnóstico y Tratamiento</h2>
-            <div className={styles.grid2}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Diagnóstico Principal *</label>
-                <textarea className={styles.textarea} rows={3} placeholder="Diagnóstico principal"
-                  value={clinico.diagnostico_principal} onChange={e => setCli(p => ({ ...p, diagnostico_principal: e.target.value }))} required />
+            <h2 className={styles.cardTitle}>🏥 Datos del Parto</h2>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
+              Completar al momento del parto. Dejar en blanco si aún no ha ocurrido.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+              <div className={fgCls}>
+                <label className={labelCls}>Fecha y hora del parto</label>
+                <input className={inputCls} type="datetime-local"
+                  value={parto.parto_fecha}
+                  onChange={e => setParto(p => ({ ...p, parto_fecha: e.target.value }))} />
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Plan de Tratamiento *</label>
-                <textarea className={styles.textarea} rows={3} placeholder="Plan de tratamiento"
-                  value={clinico.plan_tratamiento} onChange={e => setCli(p => ({ ...p, plan_tratamiento: e.target.value }))} />
+              <div className={fgCls}>
+                <label className={labelCls}>Tipo de parto</label>
+                <select className={selCls} value={parto.parto_tipo}
+                  onChange={e => setParto(p => ({ ...p, parto_tipo: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="vaginal_espontaneo">Vaginal espontáneo</option>
+                  <option value="vaginal_instrumentado">Vaginal instrumentado</option>
+                  <option value="cesarea_electiva">Cesárea electiva</option>
+                  <option value="cesarea_urgente">Cesárea urgente</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Inicio del trabajo de parto</label>
+                <select className={selCls} value={parto.parto_inicio}
+                  onChange={e => setParto(p => ({ ...p, parto_inicio: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="espontaneo">Espontáneo</option>
+                  <option value="inducido">Inducido</option>
+                  <option value="cesarea_programada">Cesárea sin labor</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Semanas al parto</label>
+                <input className={inputCls} type="number" min="20" max="45" placeholder="ej: 39"
+                  value={parto.parto_semanas}
+                  onChange={e => setParto(p => ({ ...p, parto_semanas: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Ruptura de membranas</label>
+                <input className={inputCls} type="text" placeholder="ej: Espontánea a las 14:20 h"
+                  value={parto.ruptura_membranas}
+                  onChange={e => setParto(p => ({ ...p, ruptura_membranas: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Duración del T. de parto (horas)</label>
+                <input className={inputCls} type="text" placeholder="horas"
+                  value={parto.parto_duracion_horas}
+                  onChange={e => setParto(p => ({ ...p, parto_duracion_horas: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Anestesia</label>
+                <select className={selCls} value={parto.anestesia}
+                  onChange={e => setParto(p => ({ ...p, anestesia: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="ninguna">Ninguna</option>
+                  <option value="local">Local</option>
+                  <option value="regional_epidural">Epidural</option>
+                  <option value="regional_espinal">Espinal</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Desgarro perineal</label>
+                <select className={selCls} value={parto.desgarro}
+                  onChange={e => setParto(p => ({ ...p, desgarro: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="ninguno">Ninguno</option>
+                  <option value="grado_1">Grado I</option>
+                  <option value="grado_2">Grado II</option>
+                  <option value="grado_3">Grado III</option>
+                  <option value="grado_4">Grado IV</option>
+                </select>
               </div>
             </div>
-            <div className={styles.fieldGroup} style={{ marginTop: 12 }}>
-              <label className={styles.label}>Dudas / Observaciones</label>
-              <textarea className={styles.textarea} rows={2} placeholder="Dudas del paciente u observaciones adicionales"
-                value={examenes.dudas} onChange={e => setExamenes(p => ({ ...p, dudas: e.target.value }))} />
+            <div style={{ display: "flex", gap: 20, margin: "12px 0" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                <input type="checkbox" checked={parto.episiotomia}
+                  onChange={e => setParto(p => ({ ...p, episiotomia: e.target.checked }))} />
+                Episiotomía realizada
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                <input type="checkbox" checked={parto.hemorragia_postparto}
+                  onChange={e => setParto(p => ({ ...p, hemorragia_postparto: e.target.checked }))} />
+                Hemorragia posparto
+              </label>
+            </div>
+            {(parto.parto_tipo === "cesarea_electiva" || parto.parto_tipo === "cesarea_urgente") && (
+              <div className={fgCls}>
+                <label className={labelCls}>Indicación de la cesárea</label>
+                <input className={inputCls} type="text" placeholder="Justificación clínica de la cesárea"
+                  value={parto.parto_indicacion_cesarea}
+                  onChange={e => setParto(p => ({ ...p, parto_indicacion_cesarea: e.target.value }))} />
+              </div>
+            )}
+            <div className={fgCls} style={{ marginTop: 8 }}>
+              <label className={labelCls}>Complicaciones del parto</label>
+              <textarea className={styles.textarea} rows={2} placeholder="Describa cualquier complicación"
+                value={parto.parto_complicaciones}
+                onChange={e => setParto(p => ({ ...p, parto_complicaciones: e.target.value }))} />
             </div>
           </div>
 
-          {/* ===== BOTONES ===== */}
+          {/* ══════════════════════════════════════════════════════
+              RECIÉN NACIDO — NUEVO
+          ═══════════════════════════════════════════════════════ */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>👶 Recién Nacido</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+              <div className={fgCls}>
+                <label className={labelCls}>Sexo</label>
+                <select className={selCls} value={rn.rn_sexo}
+                  onChange={e => setRn(p => ({ ...p, rn_sexo: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Peso al nacer (gr)</label>
+                <input className={inputCls} type="number" min="0" placeholder="ej: 3200"
+                  value={rn.rn_peso_gr}
+                  onChange={e => setRn(p => ({ ...p, rn_peso_gr: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Talla (cm)</label>
+                <input className={inputCls} type="number" min="0" step="0.1" placeholder="cm"
+                  value={rn.rn_talla_cm}
+                  onChange={e => setRn(p => ({ ...p, rn_talla_cm: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Perímetro cefálico (cm)</label>
+                <input className={inputCls} type="number" min="0" step="0.1" placeholder="cm"
+                  value={rn.rn_perimetro_cefalico}
+                  onChange={e => setRn(p => ({ ...p, rn_perimetro_cefalico: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Apgar al 1 minuto (0-10)</label>
+                <input className={inputCls} type="number" min="0" max="10"
+                  value={rn.rn_apgar_1}
+                  onChange={e => setRn(p => ({ ...p, rn_apgar_1: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Apgar a los 5 min (0-10)</label>
+                <input className={inputCls} type="number" min="0" max="10"
+                  value={rn.rn_apgar_5}
+                  onChange={e => setRn(p => ({ ...p, rn_apgar_5: e.target.value }))} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 20, margin: "12px 0" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                <input type="checkbox" checked={rn.rn_reanimacion}
+                  onChange={e => setRn(p => ({ ...p, rn_reanimacion: e.target.checked }))} />
+                Requirió reanimación
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                <input type="checkbox" checked={rn.rn_lactancia_materna}
+                  onChange={e => setRn(p => ({ ...p, rn_lactancia_materna: e.target.checked }))} />
+                Lactancia materna iniciada
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                <input type="checkbox" checked={rn.rn_ingreso_uci}
+                  onChange={e => setRn(p => ({ ...p, rn_ingreso_uci: e.target.checked }))} />
+                Ingreso a UCI neonatal
+              </label>
+            </div>
+            <div className={styles.grid2}>
+              <div className={fgCls}>
+                <label className={labelCls}>Malformaciones / Anomalías</label>
+                <textarea className={styles.textarea} rows={2} placeholder="Ninguna / Describa"
+                  value={rn.rn_malformaciones}
+                  onChange={e => setRn(p => ({ ...p, rn_malformaciones: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Observaciones del RN</label>
+                <textarea className={styles.textarea} rows={2} placeholder="Observaciones adicionales"
+                  value={rn.rn_observaciones}
+                  onChange={e => setRn(p => ({ ...p, rn_observaciones: e.target.value }))} />
+              </div>
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════
+              PUERPERIO — NUEVO
+          ═══════════════════════════════════════════════════════ */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>🌸 Puerperio</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+              <div className={fgCls}>
+                <label className={labelCls}>Estado del puerperio</label>
+                <select className={selCls} value={puerperio.puerperio_estado}
+                  onChange={e => setPuerperio(p => ({ ...p, puerperio_estado: e.target.value }))}>
+                  <option value="">Seleccionar</option>
+                  <option value="normal">Normal</option>
+                  <option value="complicado">Complicado</option>
+                </select>
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Anticonceptivo posparto</label>
+                <input className={inputCls} type="text" placeholder="ej: DIU, Inyectable, Condón"
+                  value={puerperio.puerperio_anticonceptivo}
+                  onChange={e => setPuerperio(p => ({ ...p, puerperio_anticonceptivo: e.target.value }))} />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Fecha de alta</label>
+                <input className={inputCls} type="date"
+                  value={puerperio.alta_fecha}
+                  onChange={e => setPuerperio(p => ({ ...p, alta_fecha: e.target.value }))} />
+              </div>
+            </div>
+            {puerperio.puerperio_estado === "complicado" && (
+              <div className={fgCls} style={{ marginTop: 8 }}>
+                <label className={labelCls}>Complicaciones del puerperio</label>
+                <textarea className={styles.textarea} rows={2} placeholder="Describa las complicaciones"
+                  value={puerperio.puerperio_complicaciones}
+                  onChange={e => setPuerperio(p => ({ ...p, puerperio_complicaciones: e.target.value }))} />
+              </div>
+            )}
+            <div className={fgCls} style={{ marginTop: 8 }}>
+              <label className={labelCls}>Observaciones del alta</label>
+              <textarea className={styles.textarea} rows={2} placeholder="Indicaciones al egreso, próxima cita, etc."
+                value={puerperio.alta_observaciones}
+                onChange={e => setPuerperio(p => ({ ...p, alta_observaciones: e.target.value }))} />
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════
+              DIAGNÓSTICO Y TRATAMIENTO — GINECOLOGÍA (INTACTO)
+          ═══════════════════════════════════════════════════════ */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>📝 Diagnóstico y Tratamiento</h2>
+            <div className={styles.grid2}>
+              <div className={fgCls}>
+                <label className={labelCls}>Diagnóstico Principal *</label>
+                <textarea className={styles.textarea} rows={3} placeholder="Diagnóstico principal"
+                  value={clinico.diagnostico_principal}
+                  onChange={e => setCli(p => ({ ...p, diagnostico_principal: e.target.value }))} required />
+              </div>
+              <div className={fgCls}>
+                <label className={labelCls}>Plan de Tratamiento</label>
+                <textarea className={styles.textarea} rows={3} placeholder="Plan de tratamiento"
+                  value={clinico.plan_tratamiento}
+                  onChange={e => setCli(p => ({ ...p, plan_tratamiento: e.target.value }))} />
+              </div>
+            </div>
+            <div className={fgCls} style={{ marginTop: 12 }}>
+              <label className={labelCls}>Observaciones</label>
+              <textarea className={styles.textarea} rows={2} placeholder="Observaciones adicionales"
+                value={clinico.observaciones}
+                onChange={e => setCli(p => ({ ...p, observaciones: e.target.value }))} />
+            </div>
+          </div>
+
+          {/* ══ BOTONES ══ */}
           <div className={styles.formButtons}>
             <button type="submit" className={styles.submitBtn} disabled={enviado}>
               {enviado ? <><div className={styles.btnSpinner} /> Guardando...</> : <><Save size={16} /> Guardar Ficha</>}

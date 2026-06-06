@@ -41,14 +41,37 @@ export async function POST(request: NextRequest) {
       peso,
       presion_sistolica,
       presion_diastolica,
-      // Antecedentes
+      // Antecedentes patológicos (ginecología/obstetricia)
       embarazo, tbc_pulmonar, hipertension, gemelares,
       diabetes, hipertension_cronica, cirugia_pelvico_uterina, infertilidad,
       antecedentes_familiares,
-      // Exámenes
+      // Fórmula obstétrica
+      formula_g, formula_p, formula_a, formula_c, formula_v,
+      // Historial obstétrico previo
+      partos_vaginales, ultimo_parto_fecha, ultimo_rn_peso_gr,
+      antec_rn_macrosomico, antec_rn_bajo_peso,
+      antec_mortalidad_perinatal, antec_preeclampsia,
+      // Datos del embarazo actual
+      tipo_embarazo, planificado, edad_gestacional_ingreso,
+      // Exámenes iniciales clásicos
       ta_inicial, vdrl, hb, tipo_sangre, fum, fpp, antitetanicas, dudas,
-      // Controles prenatales
+      // Exámenes CLAP adicionales
+      grupo_rh, hiv, glucemia_ayunas, hepatitis_b, toxoplasma,
+      urocultivo, estreptococo_b, hematocrito, plaquetas,
+      // Controles prenatales (JSONB)
       controles_prenatales,
+      // Datos del parto
+      parto_fecha, parto_tipo, parto_inicio, parto_semanas,
+      ruptura_membranas, parto_duracion_horas, anestesia,
+      episiotomia, desgarro, hemorragia_postparto,
+      parto_indicacion_cesarea, parto_complicaciones,
+      // Datos del recién nacido
+      rn_sexo, rn_peso_gr, rn_talla_cm, rn_perimetro_cefalico,
+      rn_apgar_1, rn_apgar_5, rn_reanimacion, rn_malformaciones,
+      rn_lactancia_materna, rn_ingreso_uci, rn_observaciones,
+      // Puerperio
+      puerperio_estado, puerperio_complicaciones, puerperio_anticonceptivo,
+      alta_fecha, alta_observaciones,
     } = body;
 
     if (!paciente_id || !diagnostico_principal) {
@@ -62,7 +85,7 @@ export async function POST(request: NextRequest) {
         paciente_id,
         medico_id: auth.id,
         especialidad: "ginecologia",
-        motivo_consulta: motivo_consulta || "Consulta ginecológica",
+        motivo_consulta: motivo_consulta || "Consulta ginecológica obstétrica",
         diagnostico_principal,
         plan_tratamiento: plan_tratamiento || "",
         peso: peso ? parseFloat(peso) : null,
@@ -78,50 +101,112 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Error al crear historial: ${errBase.message}` }, { status: 500 });
     }
 
+    // Helper para valores vacíos → null
+    const n = (v: any) => (v === "" || v === undefined ? null : v);
+    const nb = (v: any) => (v === undefined ? false : v ?? false);
+    const ni = (v: any) => (v === "" || v === undefined || v === null ? null : parseInt(v));
+    const nf = (v: any) => (v === "" || v === undefined || v === null ? null : parseFloat(v));
+
     // 2. Crear registro especializado en historiales_ginecologia
     const { data: histGine, error: errGine } = await supabase
       .from("historiales_ginecologia")
       .insert([{
         historial_id: historialBase.id,
         // Antecedentes
-        embarazo: embarazo ?? false,
-        tbc_pulmonar: tbc_pulmonar ?? false,
-        hipertension: hipertension ?? false,
-        gemelares: gemelares ?? false,
-        diabetes: diabetes ?? false,
-        hipertension_cronica: hipertension_cronica ?? false,
-        cirugia_pelvico_uterina: cirugia_pelvico_uterina ?? false,
-        infertilidad: infertilidad ?? false,
-        antecedentes_familiares: antecedentes_familiares || null,
-        // Exámenes
-        ta_inicial: ta_inicial || null,
-        vdrl: vdrl || null,
-        hb: hb || null,
-        // Fechas
-        fum: fum || null,
-        fpp: fpp || null,
-        // Otros
-        dudas: dudas || observaciones || null,
-        antitetanicas: antitetanicas || null,
+        embarazo: nb(embarazo),
+        tbc_pulmonar: nb(tbc_pulmonar),
+        hipertension: nb(hipertension),
+        gemelares: nb(gemelares),
+        diabetes: nb(diabetes),
+        hipertension_cronica: nb(hipertension_cronica),
+        cirugia_pelvico_uterina: nb(cirugia_pelvico_uterina),
+        infertilidad: nb(infertilidad),
+        antecedentes_familiares: n(antecedentes_familiares),
+        // Fórmula obstétrica
+        formula_g: ni(formula_g),
+        formula_p: ni(formula_p),
+        formula_a: ni(formula_a),
+        formula_c: ni(formula_c),
+        formula_v: ni(formula_v),
+        // Historial obstétrico previo
+        partos_vaginales: ni(partos_vaginales) ?? 0,
+        ultimo_parto_fecha: n(ultimo_parto_fecha),
+        ultimo_rn_peso_gr: ni(ultimo_rn_peso_gr),
+        antec_rn_macrosomico: nb(antec_rn_macrosomico),
+        antec_rn_bajo_peso: nb(antec_rn_bajo_peso),
+        antec_mortalidad_perinatal: nb(antec_mortalidad_perinatal),
+        antec_preeclampsia: nb(antec_preeclampsia),
+        // Datos del embarazo actual
+        tipo_embarazo: n(tipo_embarazo) || "unico",
+        planificado: planificado ?? null,
+        edad_gestacional_ingreso: n(edad_gestacional_ingreso),
+        // Exámenes clásicos
+        ta_inicial: n(ta_inicial),
+        vdrl: n(vdrl),
+        hb: n(hb),
+        fum: n(fum),
+        fpp: n(fpp),
+        dudas: n(dudas) || n(observaciones),
+        antitetanicas: n(antitetanicas),
+        // Exámenes CLAP adicionales
+        grupo_rh: n(grupo_rh) || n(tipo_sangre),
+        hiv: n(hiv),
+        glucemia_ayunas: n(glucemia_ayunas),
+        hepatitis_b: n(hepatitis_b),
+        toxoplasma: n(toxoplasma),
+        urocultivo: n(urocultivo),
+        estreptococo_b: n(estreptococo_b),
+        hematocrito: n(hematocrito),
+        plaquetas: n(plaquetas),
         // Controles prenatales (JSONB)
         controles_prenatales: controles_prenatales || [],
-        // Campos originales del schema
-        embrazada: embarazo ?? false,
-        fecha_ultimo_periodo: fum || null,
+        // Datos del parto
+        parto_fecha: n(parto_fecha),
+        parto_tipo: n(parto_tipo),
+        parto_inicio: n(parto_inicio),
+        parto_semanas: ni(parto_semanas),
+        ruptura_membranas: n(ruptura_membranas),
+        parto_duracion_horas: nf(parto_duracion_horas),
+        anestesia: n(anestesia),
+        episiotomia: planificado !== undefined ? nb(episiotomia) : null,
+        desgarro: n(desgarro),
+        hemorragia_postparto: nb(hemorragia_postparto),
+        parto_indicacion_cesarea: n(parto_indicacion_cesarea),
+        parto_complicaciones: n(parto_complicaciones),
+        // Recién nacido
+        rn_sexo: n(rn_sexo),
+        rn_peso_gr: ni(rn_peso_gr),
+        rn_talla_cm: nf(rn_talla_cm),
+        rn_perimetro_cefalico: nf(rn_perimetro_cefalico),
+        rn_apgar_1: ni(rn_apgar_1),
+        rn_apgar_5: ni(rn_apgar_5),
+        rn_reanimacion: nb(rn_reanimacion),
+        rn_malformaciones: n(rn_malformaciones),
+        rn_lactancia_materna: nb(rn_lactancia_materna),
+        rn_ingreso_uci: nb(rn_ingreso_uci),
+        rn_observaciones: n(rn_observaciones),
+        // Puerperio
+        puerperio_estado: n(puerperio_estado),
+        puerperio_complicaciones: n(puerperio_complicaciones),
+        puerperio_anticonceptivo: n(puerperio_anticonceptivo),
+        alta_fecha: n(alta_fecha),
+        alta_observaciones: n(alta_observaciones),
+        // Campos legacy (compatibilidad)
+        embrazada: nb(embarazo),
+        fecha_ultimo_periodo: n(fum),
       }])
       .select("id")
       .single();
 
     if (errGine) {
       console.error("Error creando historial ginecología:", errGine.message);
-      // Revertir el historial base si falla el especializado
       await supabase.from("historiales_clinicos").delete().eq("id", historialBase.id);
-      return NextResponse.json({ error: `Error al guardar ficha ginecológica: ${errGine.message}` }, { status: 500 });
+      return NextResponse.json({ error: `Error al guardar ficha: ${errGine.message}` }, { status: 500 });
     }
 
     return NextResponse.json({
       data: { historial_id: historialBase.id, ginecologia_id: histGine.id },
-      message: "Ficha ginecológica guardada exitosamente",
+      message: "Ficha ginecológica obstétrica guardada exitosamente",
     }, { status: 201 });
 
   } catch (error: any) {
@@ -147,10 +232,28 @@ export async function GET(request: NextRequest) {
         id, motivo_consulta, diagnostico_principal, plan_tratamiento,
         peso, presion_sistolica, presion_diastolica, created_at,
         historiales_ginecologia (
-          id, embarazo, tbc_pulmonar, hipertension, gemelares,
+          id,
+          embarazo, tbc_pulmonar, hipertension, gemelares,
           diabetes, hipertension_cronica, cirugia_pelvico_uterina, infertilidad,
-          antecedentes_familiares, ta_inicial, vdrl, hb, fum, fpp,
-          dudas, antitetanicas, controles_prenatales
+          antecedentes_familiares,
+          formula_g, formula_p, formula_a, formula_c, formula_v,
+          partos_vaginales, ultimo_parto_fecha, ultimo_rn_peso_gr,
+          antec_rn_macrosomico, antec_rn_bajo_peso,
+          antec_mortalidad_perinatal, antec_preeclampsia,
+          tipo_embarazo, planificado, edad_gestacional_ingreso,
+          ta_inicial, vdrl, hb, fum, fpp, dudas, antitetanicas,
+          grupo_rh, hiv, glucemia_ayunas, hepatitis_b, toxoplasma,
+          urocultivo, estreptococo_b, hematocrito, plaquetas,
+          controles_prenatales,
+          parto_fecha, parto_tipo, parto_inicio, parto_semanas,
+          ruptura_membranas, parto_duracion_horas, anestesia,
+          episiotomia, desgarro, hemorragia_postparto,
+          parto_indicacion_cesarea, parto_complicaciones,
+          rn_sexo, rn_peso_gr, rn_talla_cm, rn_perimetro_cefalico,
+          rn_apgar_1, rn_apgar_5, rn_reanimacion, rn_malformaciones,
+          rn_lactancia_materna, rn_ingreso_uci, rn_observaciones,
+          puerperio_estado, puerperio_complicaciones, puerperio_anticonceptivo,
+          alta_fecha, alta_observaciones
         )
       `)
       .eq("especialidad", "ginecologia")
