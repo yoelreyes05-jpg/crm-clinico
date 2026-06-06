@@ -91,8 +91,9 @@ export default function HistorialGinecologiaPage() {
   const [historialExistente, setHistorialExistente] = useState<any[]>([]);
   const [cargandoHistoriales, setCargandoHistoriales] = useState(false);
 
-  // ── Antecedentes patológicos (GINECOLOGÍA — NO MODIFICAR) ──
+  // ── Antecedentes patológicos (ampliados — MSP RD / CLAP / OMS) ──
   const [antecedentes, setAntecedentes] = useState({
+    // Clásicos — backward compatible
     embarazo: false,
     tbc_pulmonar: false,
     hipertension: false,
@@ -102,6 +103,42 @@ export default function HistorialGinecologiaPage() {
     cirugia_pelvico_uterina: false,
     infertilidad: false,
     antecedentes_familiares: "",
+    // Enfermedades crónicas
+    ant_cardiopatia: false,
+    ant_asma: false,
+    ant_enfermedad_renal: false,
+    ant_hipotiroidismo: false,
+    ant_epilepsia: false,
+    ant_lupus: false,
+    ant_depresion: false,
+    ant_anemia_cronica: false,
+    ant_trombofilia: false,
+    ant_obesidad: false,
+    // Infecciosos / ITS
+    ant_vih_sida: false,
+    ant_hepatitis_b_prev: false,
+    ant_sifilis_previa: false,
+    ant_its: false,
+    // Ginecológicos
+    ant_mioma_miomectomia: false,
+    ant_conizacion: false,
+    ant_endometriosis: false,
+    ant_sop: false,
+    ant_cerclaje_previo: false,
+    // Obstétricos de riesgo
+    ant_parto_pretermino: false,
+    ant_cesarea_previa: false,
+    ant_rciu: false,
+    ant_perdida_fetal: false,
+    ant_hemorragia_posparto: false,
+    ant_diabetes_gestacional: false,
+    ant_incomp_cervical: false,
+    // Hábitos y factores sociales
+    ant_tabaquismo: false,
+    ant_alcoholismo: false,
+    ant_drogas: false,
+    // Texto libre
+    antecedentes_personales_otros: "",
   });
 
   // ── Fórmula obstétrica ──
@@ -335,6 +372,40 @@ export default function HistorialGinecologiaPage() {
     const w = window.open("", "_blank");
     if (!w) return;
 
+    // ── Mapas de etiquetas (valores DB → texto en español imprimible) ──
+    const mapPartotipo: Record<string, string> = {
+      vaginal_espontaneo: "Vaginal espontáneo",
+      vaginal_instrumentado: "Vaginal instrumentado",
+      cesarea_electiva: "Cesárea electiva",
+      cesarea_urgente: "Cesárea urgente",
+    };
+    const mapInicio: Record<string, string> = {
+      espontaneo: "Espontáneo",
+      inducido: "Inducido",
+      cesarea_programada: "Cesárea sin labor",
+    };
+    const mapAnestesia: Record<string, string> = {
+      ninguna: "Ninguna",
+      local: "Local",
+      regional_epidural: "Epidural (regional)",
+      regional_espinal: "Espinal (regional)",
+      general: "General",
+    };
+    const mapDesgarro: Record<string, string> = {
+      ninguno: "Ninguno",
+      grado_1: "Grado I",
+      grado_2: "Grado II",
+      grado_3: "Grado III",
+      grado_4: "Grado IV",
+    };
+    const mapPresentacion: Record<string, string> = {
+      cefalica: "Cefálica",
+      podalica: "Podálica",
+      transversa: "Transversa",
+      indefinida: "Indefinida",
+    };
+    const lbl = (map: Record<string, string>, val: string) => map[val] || val || "—";
+
     const formulaStr = [
       formula.g ? `G${formula.g}` : "",
       formula.p ? `P${formula.p}` : "",
@@ -343,20 +414,67 @@ export default function HistorialGinecologiaPage() {
       formula.v ? `V${formula.v}` : "",
     ].filter(Boolean).join(" ");
 
-    const antList: [string, boolean][] = [
+    // ── Listas de antecedentes por categoría ──
+    const antCronicos: [string, boolean][] = [
       ["Embarazo previo", antecedentes.embarazo],
-      ["TBC Pulmonar", antecedentes.tbc_pulmonar],
-      ["Hipertensión", antecedentes.hipertension],
-      ["Gemelares", antecedentes.gemelares],
-      ["Diabetes", antecedentes.diabetes],
+      ["Diabetes mellitus", antecedentes.diabetes],
+      ["Hipertensión arterial", antecedentes.hipertension],
       ["HTA Crónica", antecedentes.hipertension_cronica],
-      ["Cir. Pélvico-Uterina", antecedentes.cirugia_pelvico_uterina],
-      ["Infertilidad", antecedentes.infertilidad],
-      ["Preeclampsia prev.", histObstetrico.antec_preeclampsia],
-      ["RN Macrosómico", histObstetrico.antec_rn_macrosomico],
-      ["RN Bajo Peso", histObstetrico.antec_rn_bajo_peso],
-      ["Mort. Perinatal", histObstetrico.antec_mortalidad_perinatal],
+      ["Tuberculosis (TBC)", antecedentes.tbc_pulmonar],
+      ["Cardiopatía / Enf. cardíaca", antecedentes.ant_cardiopatia],
+      ["Asma bronquial / EPOC", antecedentes.ant_asma],
+      ["Enf. renal / Nefropatía", antecedentes.ant_enfermedad_renal],
+      ["Hipotiroidismo / Enf. tiroidea", antecedentes.ant_hipotiroidismo],
+      ["Epilepsia / Convulsiones", antecedentes.ant_epilepsia],
+      ["Lupus (LES) / Autoinmune", antecedentes.ant_lupus],
+      ["Depresión / Salud mental", antecedentes.ant_depresion],
+      ["Anemia crónica / Hemoglobinopatía", antecedentes.ant_anemia_cronica],
+      ["Trombofilia / Coagulopatía", antecedentes.ant_trombofilia],
+      ["Obesidad (IMC ≥ 30)", antecedentes.ant_obesidad],
+      ["Embarazo gemelar previo", antecedentes.gemelares],
     ];
+    const antInfecciosos: [string, boolean][] = [
+      ["VIH / SIDA (conocido previo)", antecedentes.ant_vih_sida],
+      ["Hepatitis B (antecedente)", antecedentes.ant_hepatitis_b_prev],
+      ["Sífilis (tratada previamente)", antecedentes.ant_sifilis_previa],
+      ["Otras ITS (gonorrea, clamidia, VPH, herpes)", antecedentes.ant_its],
+    ];
+    const antGine: [string, boolean][] = [
+      ["Cirugía pélvico-uterina", antecedentes.cirugia_pelvico_uterina],
+      ["Infertilidad tratada", antecedentes.infertilidad],
+      ["Mioma uterino / Miomectomía", antecedentes.ant_mioma_miomectomia],
+      ["Conización cervical / LEEP", antecedentes.ant_conizacion],
+      ["Endometriosis", antecedentes.ant_endometriosis],
+      ["Síndrome de ovario poliquístico (SOP)", antecedentes.ant_sop],
+      ["Cerclaje cervical previo", antecedentes.ant_cerclaje_previo],
+    ];
+    const antObst: [string, boolean][] = [
+      ["Parto pretérmino previo (<37 sem)", antecedentes.ant_parto_pretermino],
+      ["Cesárea previa", antecedentes.ant_cesarea_previa],
+      ["Preeclampsia previa", histObstetrico.antec_preeclampsia],
+      ["RCIU previo", antecedentes.ant_rciu],
+      ["Pérdida fetal / Muerte intrauterina", antecedentes.ant_perdida_fetal],
+      ["Hemorragia posparto previa", antecedentes.ant_hemorragia_posparto],
+      ["Diabetes gestacional previa", antecedentes.ant_diabetes_gestacional],
+      ["Incompetencia cervical", antecedentes.ant_incomp_cervical],
+      ["RN Macrosómico (>4 kg)", histObstetrico.antec_rn_macrosomico],
+      ["RN Bajo peso (<2.5 kg)", histObstetrico.antec_rn_bajo_peso],
+      ["Mortalidad perinatal previa", histObstetrico.antec_mortalidad_perinatal],
+    ];
+    const antHabitos: [string, boolean][] = [
+      ["Tabaquismo activo", antecedentes.ant_tabaquismo],
+      ["Consumo de alcohol", antecedentes.ant_alcoholismo],
+      ["Consumo de drogas / Sustancias", antecedentes.ant_drogas],
+    ];
+
+    const antSection = (titulo: string, lista: [string, boolean][]) => `
+      <div class="ant-cat-title">${titulo}</div>
+      <div class="ant-grid">
+        ${lista.map(([etiq, val]) => `
+          <div class="ant-item ${val ? "si" : ""}">
+            <div class="ant-check">${val ? "✓" : ""}</div>${etiq}
+          </div>`).join("")}
+      </div>`;
 
     const controlesConFecha = controles.filter(c => c.fecha);
     const controlesHtml = controlesConFecha.map((c, i) => `
@@ -367,11 +485,12 @@ export default function HistorialGinecologiaPage() {
         <td style="text-align:center">${c.peso || ""}</td>
         <td style="text-align:center">${c.ta || ""}</td>
         <td style="text-align:center">${c.altura_uterina || ""}</td>
-        <td style="text-align:center">${c.presentacion || ""}</td>
+        <td style="text-align:center">${lbl(mapPresentacion, c.presentacion)}</td>
         <td style="text-align:center">${c.fcc_mov || ""}</td>
         <td style="text-align:center">${c.edema ? "Sí" : "No"}</td>
         <td style="text-align:center">${c.varice ? "Sí" : "No"}</td>
-        <td style="text-align:center">${c.proteinuria || "—"}</td>
+        <td style="text-align:center">${c.proteinuria === "negativo" ? "Neg." : c.proteinuria || "—"}</td>
+        <td style="text-align:center">${c.hemoglobina_ctrl || "—"}</td>
         <td>${c.observaciones || ""}</td>
       </tr>`).join("");
 
@@ -379,7 +498,7 @@ export default function HistorialGinecologiaPage() {
     const filasVacias = Array(filasFaltantes).fill(0).map((_, i) => `
       <tr>
         <td style="text-align:center;background:#f8fafc">${controlesConFecha.length + i + 1}</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
       </tr>`).join("");
 
     w.document.write(`<!DOCTYPE html><html lang="es"><head>
@@ -397,11 +516,12 @@ export default function HistorialGinecologiaPage() {
         .info-item label { display: block; font-size: 7px; color: #9d174d; text-transform: uppercase; font-weight: bold; }
         .info-item span { font-size: 9px; font-weight: bold; }
         .section-title { background: #be185d; color: white; padding: 2px 7px; font-size: 8.5px; font-weight: bold; text-transform: uppercase; margin: 6px 0 3px; border-radius: 2px; }
+        .ant-cat-title { font-size: 7.5px; font-weight: bold; color: #9d174d; text-transform: uppercase; margin: 4px 0 2px; border-bottom: 1px solid #fbcfe8; padding-bottom: 1px; }
         .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; margin-bottom: 3px; }
         .exam-item { border-bottom: 1px solid #ddd; padding: 2px 0; }
         .exam-item label { display: block; font-size: 7px; color: #777; text-transform: uppercase; font-weight: bold; }
         .exam-item span { font-size: 9px; font-weight: bold; min-height: 11px; display: block; }
-        .ant-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; margin-bottom: 3px; }
+        .ant-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; margin-bottom: 2px; }
         .ant-item { display: flex; align-items: center; gap: 3px; border: 1px solid #ddd; padding: 2px 5px; border-radius: 2px; font-size: 8px; }
         .ant-item.si { border-color: #be185d; background: #fce7f3; color: #9d174d; font-weight: bold; }
         .ant-check { width: 8px; height: 8px; border: 1.5px solid currentColor; display: inline-flex; align-items: center; justify-content: center; border-radius: 1px; font-size: 6.5px; flex-shrink:0; }
@@ -434,7 +554,7 @@ export default function HistorialGinecologiaPage() {
       <div class="info-item"><label>Teléfono</label><span>${paciente.telefono || "—"}</span></div>
       <div class="info-item"><label>FUM</label><span>${fmtFecha(embarazoActual.fum)}</span></div>
       <div class="info-item"><label>FPP</label><span>${fmtFecha(embarazoActual.fpp)}</span></div>
-      <div class="info-item"><label>Tipo embarazo</label><span style="text-transform:capitalize">${embarazoActual.tipo_embarazo || "Único"}</span></div>
+      <div class="info-item"><label>Tipo embarazo</label><span>${embarazoActual.tipo_embarazo === "unico" ? "Único" : embarazoActual.tipo_embarazo === "gemelar" ? "Gemelar" : embarazoActual.tipo_embarazo || "Único"}</span></div>
       <div class="info-item"><label>EG al ingreso</label><span>${embarazoActual.edad_gestacional_ingreso || "—"}</span></div>
     </div>
 
@@ -442,31 +562,32 @@ export default function HistorialGinecologiaPage() {
     <div style="margin-bottom:5px;padding:3px 8px;background:#fdf2f8;border-radius:4px;display:inline-block">
       <span style="font-size:8px;color:#9d174d;font-weight:bold;text-transform:uppercase">Fórmula obstétrica:</span>
       <span style="font-size:14px;font-weight:bold;color:#be185d;margin-left:8px">${formulaStr}</span>
-      ${histObstetrico.partos_vaginales ? `<span style="font-size:8px;color:#555;margin-left:8px">(${histObstetrico.partos_vaginales} vaginales)</span>` : ""}
+      ${histObstetrico.partos_vaginales ? `<span style="font-size:8px;color:#555;margin-left:8px">(${histObstetrico.partos_vaginales} partos vaginales)</span>` : ""}
+      ${histObstetrico.ultimo_parto_fecha ? `<span style="font-size:8px;color:#555;margin-left:8px">· Último parto: ${fmtFecha(histObstetrico.ultimo_parto_fecha)}</span>` : ""}
     </div>` : ""}
 
     <div class="section-title">Antecedentes Patológicos</div>
-    <div class="ant-grid">
-      ${antList.map(([lbl, val]) => `
-        <div class="ant-item ${val ? "si" : ""}">
-          <div class="ant-check">${val ? "✓" : ""}</div>${lbl}
-        </div>`).join("")}
-    </div>
+    ${antSection("Enfermedades Crónicas", antCronicos)}
+    ${antSection("Antecedentes Infecciosos / Infecciones de Transmisión Sexual", antInfecciosos)}
+    ${antSection("Antecedentes Ginecológicos y Quirúrgicos", antGine)}
+    ${antSection("Antecedentes Obstétricos de Riesgo", antObst)}
+    ${antSection("Hábitos y Factores de Riesgo Social", antHabitos)}
     ${antecedentes.antecedentes_familiares ? `<div class="field-line"><label>Antecedentes familiares</label><span>${antecedentes.antecedentes_familiares}</span></div>` : ""}
+    ${antecedentes.antecedentes_personales_otros ? `<div class="field-line"><label>Otros antecedentes personales</label><span>${antecedentes.antecedentes_personales_otros}</span></div>` : ""}
 
     <div class="section-title">Exámenes de Laboratorio Iniciales (CLAP)</div>
     <div class="grid4">
       <div class="exam-item"><label>T.A. Inicial</label><span>${examenes.ta_inicial||"—"}</span></div>
-      <div class="exam-item"><label>VDRL / RPR</label><span>${examenes.vdrl||"—"}</span></div>
-      <div class="exam-item"><label>Hemoglobina</label><span>${examenes.hb||"—"}</span></div>
-      <div class="exam-item"><label>Hematocrito</label><span>${examenes.hematocrito||"—"}</span></div>
-      <div class="exam-item"><label>Grupo / Rh</label><span>${examenes.grupo_rh||"—"}</span></div>
+      <div class="exam-item"><label>VDRL / RPR (Sífilis)</label><span>${examenes.vdrl||"—"}</span></div>
+      <div class="exam-item"><label>Hemoglobina (g/dL)</label><span>${examenes.hb||"—"}</span></div>
+      <div class="exam-item"><label>Hematocrito (%)</label><span>${examenes.hematocrito||"—"}</span></div>
+      <div class="exam-item"><label>Grupo sanguíneo / Rh</label><span>${examenes.grupo_rh||"—"}</span></div>
       <div class="exam-item"><label>VIH</label><span>${examenes.hiv||"—"}</span></div>
-      <div class="exam-item"><label>Glucemia ayunas</label><span>${examenes.glucemia_ayunas||"—"}</span></div>
-      <div class="exam-item"><label>Hepatitis B</label><span>${examenes.hepatitis_b||"—"}</span></div>
-      <div class="exam-item"><label>Toxoplasma</label><span>${examenes.toxoplasma||"—"}</span></div>
+      <div class="exam-item"><label>Glucemia en ayunas</label><span>${examenes.glucemia_ayunas ? examenes.glucemia_ayunas + " mg/dL" : "—"}</span></div>
+      <div class="exam-item"><label>Hepatitis B (HBsAg)</label><span>${examenes.hepatitis_b||"—"}</span></div>
+      <div class="exam-item"><label>Toxoplasma IgG / IgM</label><span>${examenes.toxoplasma||"—"}</span></div>
       <div class="exam-item"><label>Urocultivo</label><span>${examenes.urocultivo||"—"}</span></div>
-      <div class="exam-item"><label>Estreptococo B</label><span>${examenes.estreptococo_b||"—"}</span></div>
+      <div class="exam-item"><label>Estreptococo B (SGB)</label><span>${examenes.estreptococo_b||"—"}</span></div>
       <div class="exam-item"><label>Antitetánicas</label><span>${examenes.antitetanicas||"—"}</span></div>
     </div>
 
@@ -476,7 +597,7 @@ export default function HistorialGinecologiaPage() {
         <tr>
           <th>#</th><th>Fecha</th><th>EG</th><th>Peso</th><th>T.A.</th>
           <th>A.U.</th><th>Presentación</th><th>FCC/MOV</th>
-          <th>Edema</th><th>Várice</th><th>Proteinuria</th><th>Observaciones</th>
+          <th>Edema</th><th>Várice</th><th>Proteinuria</th><th>Hb ctrl</th><th>Observaciones</th>
         </tr>
       </thead>
       <tbody>${controlesHtml}${filasVacias}</tbody>
@@ -485,48 +606,64 @@ export default function HistorialGinecologiaPage() {
     ${parto.parto_fecha || parto.parto_tipo ? `
     <div class="section-title">Datos del Parto</div>
     <div class="grid4">
-      <div class="exam-item"><label>Fecha / Hora</label><span>${parto.parto_fecha ? new Date(parto.parto_fecha).toLocaleString("es-ES") : "—"}</span></div>
-      <div class="exam-item"><label>Tipo</label><span>${parto.parto_tipo||"—"}</span></div>
-      <div class="exam-item"><label>Inicio T. Parto</label><span>${parto.parto_inicio||"—"}</span></div>
-      <div class="exam-item"><label>Semanas</label><span>${parto.parto_semanas||"—"}</span></div>
-      <div class="exam-item"><label>Ruptura membranas</label><span>${parto.ruptura_membranas||"—"}</span></div>
-      <div class="exam-item"><label>Anestesia</label><span>${parto.anestesia||"—"}</span></div>
-      <div class="exam-item"><label>Episiotomía</label><span>${parto.episiotomia ? "Sí" : "No"}</span></div>
-      <div class="exam-item"><label>Desgarro</label><span>${parto.desgarro||"—"}</span></div>
+      <div class="exam-item"><label>Fecha y hora del parto</label><span>${parto.parto_fecha ? new Date(parto.parto_fecha).toLocaleString("es-ES") : "—"}</span></div>
+      <div class="exam-item"><label>Tipo de parto</label><span>${lbl(mapPartotipo, parto.parto_tipo)}</span></div>
+      <div class="exam-item"><label>Inicio del trabajo de parto</label><span>${lbl(mapInicio, parto.parto_inicio)}</span></div>
+      <div class="exam-item"><label>Semanas al parto</label><span>${parto.parto_semanas ? parto.parto_semanas + " semanas" : "—"}</span></div>
+      <div class="exam-item"><label>Ruptura de membranas</label><span>${parto.ruptura_membranas||"—"}</span></div>
+      <div class="exam-item"><label>Duración trabajo de parto</label><span>${parto.parto_duracion_horas ? parto.parto_duracion_horas + " horas" : "—"}</span></div>
+      <div class="exam-item"><label>Anestesia utilizada</label><span>${lbl(mapAnestesia, parto.anestesia)}</span></div>
+      <div class="exam-item"><label>Desgarro perineal</label><span>${lbl(mapDesgarro, parto.desgarro)}</span></div>
+      <div class="exam-item"><label>Episiotomía</label><span>${parto.episiotomia ? "Sí, realizada" : "No"}</span></div>
+      <div class="exam-item"><label>Hemorragia posparto</label><span>${parto.hemorragia_postparto ? "Sí, presente" : "No"}</span></div>
+      ${parto.parto_indicacion_cesarea ? `<div class="exam-item" style="grid-column:span 2"><label>Indicación de la cesárea</label><span>${parto.parto_indicacion_cesarea}</span></div>` : ""}
     </div>
-    ${parto.parto_complicaciones ? `<div class="field-line"><label>Complicaciones</label><span>${parto.parto_complicaciones}</span></div>` : ""}
+    ${parto.parto_complicaciones ? `<div class="field-line"><label>Complicaciones del parto</label><span>${parto.parto_complicaciones}</span></div>` : ""}
     ` : ""}
 
     ${rn.rn_peso_gr || rn.rn_apgar_1 ? `
-    <div class="section-title">Recién Nacido</div>
+    <div class="section-title">Datos del Recién Nacido</div>
     <div class="grid4">
       <div class="exam-item"><label>Sexo</label><span>${rn.rn_sexo === "M" ? "Masculino" : rn.rn_sexo === "F" ? "Femenino" : "—"}</span></div>
-      <div class="exam-item"><label>Peso (gr)</label><span>${rn.rn_peso_gr||"—"}</span></div>
-      <div class="exam-item"><label>Talla (cm)</label><span>${rn.rn_talla_cm||"—"}</span></div>
-      <div class="exam-item"><label>PC (cm)</label><span>${rn.rn_perimetro_cefalico||"—"}</span></div>
-      <div class="exam-item"><label>Apgar 1'/5'</label><span>${rn.rn_apgar_1||"—"} / ${rn.rn_apgar_5||"—"}</span></div>
-      <div class="exam-item"><label>Reanimación</label><span>${rn.rn_reanimacion ? "Sí" : "No"}</span></div>
-      <div class="exam-item"><label>Lactancia materna</label><span>${rn.rn_lactancia_materna ? "Sí" : "No"}</span></div>
-      <div class="exam-item"><label>UCI Neonatal</label><span>${rn.rn_ingreso_uci ? "Sí" : "No"}</span></div>
+      <div class="exam-item"><label>Peso al nacer</label><span>${rn.rn_peso_gr ? rn.rn_peso_gr + " gramos" : "—"}</span></div>
+      <div class="exam-item"><label>Talla</label><span>${rn.rn_talla_cm ? rn.rn_talla_cm + " cm" : "—"}</span></div>
+      <div class="exam-item"><label>Perímetro cefálico</label><span>${rn.rn_perimetro_cefalico ? rn.rn_perimetro_cefalico + " cm" : "—"}</span></div>
+      <div class="exam-item"><label>Apgar al 1 minuto</label><span>${rn.rn_apgar_1 || "—"}</span></div>
+      <div class="exam-item"><label>Apgar a los 5 minutos</label><span>${rn.rn_apgar_5 || "—"}</span></div>
+      <div class="exam-item"><label>Reanimación neonatal</label><span>${rn.rn_reanimacion ? "Sí, requerida" : "No"}</span></div>
+      <div class="exam-item"><label>Lactancia materna</label><span>${rn.rn_lactancia_materna ? "Sí, iniciada" : "No"}</span></div>
+      <div class="exam-item"><label>Ingreso UCI neonatal</label><span>${rn.rn_ingreso_uci ? "Sí" : "No"}</span></div>
     </div>
-    ${rn.rn_malformaciones ? `<div class="field-line"><label>Malformaciones / Obs.</label><span>${rn.rn_malformaciones}</span></div>` : ""}
+    ${rn.rn_malformaciones ? `<div class="field-line"><label>Malformaciones / Anomalías congénitas</label><span>${rn.rn_malformaciones}</span></div>` : ""}
+    ${rn.rn_observaciones ? `<div class="field-line"><label>Observaciones del recién nacido</label><span>${rn.rn_observaciones}</span></div>` : ""}
     ` : ""}
 
-    <div class="section-title">Diagnóstico y Tratamiento</div>
+    ${puerperio.puerperio_estado || puerperio.alta_fecha || puerperio.puerperio_anticonceptivo ? `
+    <div class="section-title">Puerperio</div>
+    <div class="grid4">
+      <div class="exam-item"><label>Estado del puerperio</label><span>${puerperio.puerperio_estado === "normal" ? "Normal" : puerperio.puerperio_estado === "complicado" ? "Complicado" : puerperio.puerperio_estado || "—"}</span></div>
+      <div class="exam-item"><label>Anticonceptivo posparto</label><span>${puerperio.puerperio_anticonceptivo || "—"}</span></div>
+      <div class="exam-item"><label>Fecha de alta</label><span>${fmtFecha(puerperio.alta_fecha)}</span></div>
+    </div>
+    ${puerperio.puerperio_complicaciones ? `<div class="field-line"><label>Complicaciones del puerperio</label><span>${puerperio.puerperio_complicaciones}</span></div>` : ""}
+    ${puerperio.alta_observaciones ? `<div class="field-line"><label>Indicaciones al alta / Próxima cita</label><span>${puerperio.alta_observaciones}</span></div>` : ""}
+    ` : ""}
+
+    <div class="section-title">Diagnóstico y Plan de Tratamiento</div>
     <div class="grid2">
       <div>
         <div class="field-line"><label>Diagnóstico principal</label><span>${clinico.diagnostico_principal||""}</span></div>
         <div class="field-line"><label>Plan de tratamiento</label><span>${clinico.plan_tratamiento||""}</span></div>
       </div>
       <div>
+        ${clinico.motivo_consulta ? `<div class="field-line"><label>Motivo de consulta</label><span>${clinico.motivo_consulta}</span></div>` : ""}
         <div class="field-line"><label>Observaciones</label><span>${clinico.observaciones||""}</span></div>
-        ${puerperio.puerperio_anticonceptivo ? `<div class="field-line"><label>Anticonceptivo posparto</label><span>${puerperio.puerperio_anticonceptivo}</span></div>` : ""}
       </div>
     </div>
 
     <div class="footer">
       <div class="firma">Firma del Médico</div>
-      <div class="firma">Firma del Paciente</div>
+      <div class="firma">Firma del Paciente / Familiar</div>
       <div class="firma">Sello / Fecha</div>
     </div>
 
@@ -669,32 +806,149 @@ export default function HistorialGinecologiaPage() {
           </div>
 
           {/* ══════════════════════════════════════════════════════
-              ANTECEDENTES PATOLÓGICOS — GINECOLOGÍA (INTACTO)
+              ANTECEDENTES PATOLÓGICOS — AMPLIADOS (MSP RD / CLAP)
           ═══════════════════════════════════════════════════════ */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>📋 Antecedentes Patológicos</h2>
-            <div className={styles.antGrid}>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>
+              Marque todos los antecedentes presentes. Basado en Protocolos MSP República Dominicana y estándar CLAP/OMS.
+            </p>
+
+            {/* — Enfermedades Crónicas — */}
+            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 6, borderBottom: "1px solid var(--border)", paddingBottom: 3 }}>
+              Enfermedades Crónicas
+            </p>
+            <div className={styles.antGrid} style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 14 }}>
               {([
-                ["embarazo", "Embarazo"],
-                ["tbc_pulmonar", "TBC Pulmonar"],
-                ["hipertension", "Hipertensión"],
-                ["gemelares", "Gemelares"],
-                ["diabetes", "Diabetes"],
+                ["embarazo", "Embarazo previo"],
+                ["diabetes", "Diabetes mellitus"],
+                ["hipertension", "Hipertensión arterial"],
                 ["hipertension_cronica", "HTA Crónica"],
-                ["cirugia_pelvico_uterina", "Cir. Pélvico-Uterina"],
-                ["infertilidad", "Infertilidad"],
+                ["tbc_pulmonar", "Tuberculosis (TBC)"],
+                ["ant_cardiopatia", "Cardiopatía / Enf. cardíaca"],
+                ["ant_asma", "Asma bronquial / EPOC"],
+                ["ant_enfermedad_renal", "Enf. renal / Nefropatía"],
+                ["ant_hipotiroidismo", "Hipotiroidismo / Enf. tiroidea"],
+                ["ant_epilepsia", "Epilepsia / Convulsiones"],
+                ["ant_lupus", "Lupus (LES) / Autoinmune"],
+                ["ant_depresion", "Depresión / Salud mental"],
+                ["ant_anemia_cronica", "Anemia crónica / Hemoglobinopatía"],
+                ["ant_trombofilia", "Trombofilia / Coagulopatía"],
+                ["ant_obesidad", "Obesidad (IMC ≥ 30)"],
+                ["gemelares", "Embarazo gemelar previo"],
               ] as [keyof typeof antecedentes, string][]).map(([campo, label]) => (
-                <label key={campo} className={`${styles.antItem} ${antecedentes[campo] ? styles.antItemSi : ""}`}>
-                  <input type="checkbox" checked={!!antecedentes[campo]} onChange={() => toggleAnt(campo)} className={styles.antCheck} />
+                <label key={campo} className={`${styles.antItem} ${antecedentes[campo as keyof typeof antecedentes] ? styles.antItemSi : ""}`}>
+                  <input type="checkbox"
+                    checked={!!antecedentes[campo as keyof typeof antecedentes]}
+                    onChange={() => toggleAnt(campo as keyof typeof antecedentes)}
+                    className={styles.antCheck} />
                   {label}
                 </label>
               ))}
             </div>
+
+            {/* — Infecciosos / ITS — */}
+            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 6, borderBottom: "1px solid var(--border)", paddingBottom: 3 }}>
+              Antecedentes Infecciosos / Infecciones de Transmisión Sexual (ITS)
+            </p>
+            <div className={styles.antGrid} style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 14 }}>
+              {([
+                ["ant_vih_sida", "VIH / SIDA (conocido previo)"],
+                ["ant_hepatitis_b_prev", "Hepatitis B (antecedente previo)"],
+                ["ant_sifilis_previa", "Sífilis (tratada previamente)"],
+                ["ant_its", "Otras ITS (gonorrea, clamidia, VPH, herpes)"],
+              ] as [keyof typeof antecedentes, string][]).map(([campo, label]) => (
+                <label key={campo} className={`${styles.antItem} ${antecedentes[campo as keyof typeof antecedentes] ? styles.antItemSi : ""}`}>
+                  <input type="checkbox"
+                    checked={!!antecedentes[campo as keyof typeof antecedentes]}
+                    onChange={() => toggleAnt(campo as keyof typeof antecedentes)}
+                    className={styles.antCheck} />
+                  {label}
+                </label>
+              ))}
+            </div>
+
+            {/* — Ginecológicos — */}
+            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 6, borderBottom: "1px solid var(--border)", paddingBottom: 3 }}>
+              Antecedentes Ginecológicos y Quirúrgicos
+            </p>
+            <div className={styles.antGrid} style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 14 }}>
+              {([
+                ["cirugia_pelvico_uterina", "Cirugía pélvico-uterina previa"],
+                ["infertilidad", "Infertilidad tratada"],
+                ["ant_mioma_miomectomia", "Mioma uterino / Miomectomía"],
+                ["ant_conizacion", "Conización cervical / LEEP"],
+                ["ant_endometriosis", "Endometriosis"],
+                ["ant_sop", "Síndrome ovario poliquístico (SOP)"],
+                ["ant_cerclaje_previo", "Cerclaje cervical previo"],
+              ] as [keyof typeof antecedentes, string][]).map(([campo, label]) => (
+                <label key={campo} className={`${styles.antItem} ${antecedentes[campo as keyof typeof antecedentes] ? styles.antItemSi : ""}`}>
+                  <input type="checkbox"
+                    checked={!!antecedentes[campo as keyof typeof antecedentes]}
+                    onChange={() => toggleAnt(campo as keyof typeof antecedentes)}
+                    className={styles.antCheck} />
+                  {label}
+                </label>
+              ))}
+            </div>
+
+            {/* — Obstétricos de Riesgo — */}
+            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 6, borderBottom: "1px solid var(--border)", paddingBottom: 3 }}>
+              Antecedentes Obstétricos de Riesgo
+            </p>
+            <div className={styles.antGrid} style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 14 }}>
+              {([
+                ["ant_parto_pretermino", "Parto pretérmino previo (<37 sem)"],
+                ["ant_cesarea_previa", "Cesárea previa"],
+                ["ant_rciu", "RCIU previo (restricción crecimiento)"],
+                ["ant_perdida_fetal", "Pérdida fetal / Muerte intrauterina"],
+                ["ant_hemorragia_posparto", "Hemorragia posparto previa"],
+                ["ant_diabetes_gestacional", "Diabetes gestacional previa"],
+                ["ant_incomp_cervical", "Incompetencia cervical / Abortos tardíos"],
+              ] as [keyof typeof antecedentes, string][]).map(([campo, label]) => (
+                <label key={campo} className={`${styles.antItem} ${antecedentes[campo as keyof typeof antecedentes] ? styles.antItemSi : ""}`}>
+                  <input type="checkbox"
+                    checked={!!antecedentes[campo as keyof typeof antecedentes]}
+                    onChange={() => toggleAnt(campo as keyof typeof antecedentes)}
+                    className={styles.antCheck} />
+                  {label}
+                </label>
+              ))}
+            </div>
+
+            {/* — Hábitos y Factores Sociales — */}
+            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 6, borderBottom: "1px solid var(--border)", paddingBottom: 3 }}>
+              Hábitos y Factores de Riesgo Social
+            </p>
+            <div className={styles.antGrid} style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 14 }}>
+              {([
+                ["ant_tabaquismo", "Tabaquismo activo"],
+                ["ant_alcoholismo", "Consumo de alcohol"],
+                ["ant_drogas", "Consumo de drogas / Sustancias"],
+              ] as [keyof typeof antecedentes, string][]).map(([campo, label]) => (
+                <label key={campo} className={`${styles.antItem} ${antecedentes[campo as keyof typeof antecedentes] ? styles.antItemSi : ""}`}>
+                  <input type="checkbox"
+                    checked={!!antecedentes[campo as keyof typeof antecedentes]}
+                    onChange={() => toggleAnt(campo as keyof typeof antecedentes)}
+                    className={styles.antCheck} />
+                  {label}
+                </label>
+              ))}
+            </div>
+
             <div className={fgCls}>
               <label className={labelCls}>Antecedentes Familiares</label>
-              <input className={inputCls} type="text" placeholder="Describa antecedentes familiares relevantes"
+              <input className={inputCls} type="text"
+                placeholder="Hipertensión, diabetes, malformaciones, enfermedades hereditarias..."
                 value={antecedentes.antecedentes_familiares}
                 onChange={e => setAntecedentes(prev => ({ ...prev, antecedentes_familiares: e.target.value }))} />
+            </div>
+            <div className={fgCls} style={{ marginTop: 8 }}>
+              <label className={labelCls}>Otros Antecedentes Personales Relevantes</label>
+              <textarea className={styles.textarea} rows={2}
+                placeholder="Cualquier otro antecedente médico o quirúrgico no listado arriba..."
+                value={antecedentes.antecedentes_personales_otros}
+                onChange={e => setAntecedentes(prev => ({ ...prev, antecedentes_personales_otros: e.target.value }))} />
             </div>
           </div>
 
