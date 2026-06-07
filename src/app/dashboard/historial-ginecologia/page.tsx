@@ -369,8 +369,6 @@ export default function HistorialGinecologiaPage() {
 
   const handlePrint = () => {
     if (!paciente) return;
-    const w = window.open("", "_blank");
-    if (!w) return;
 
     // ── Mapas de etiquetas (valores DB → texto en español imprimible) ──
     const mapPartotipo: Record<string, string> = {
@@ -501,7 +499,7 @@ export default function HistorialGinecologiaPage() {
         <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
       </tr>`).join("");
 
-    w.document.write(`<!DOCTYPE html><html lang="es"><head>
+    const htmlContent = `<!DOCTYPE html><html lang="es"><head>
       <meta charset="UTF-8">
       <title>Historia Clínica Perinatal — ${paciente.nombre_completo}</title>
       <style>
@@ -667,9 +665,25 @@ export default function HistorialGinecologiaPage() {
       <div class="firma">Sello / Fecha</div>
     </div>
 
-    </body></html>`);
-    w.document.close();
-    setTimeout(() => w.print(), 300);
+    </body></html>`;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow?.document;
+    if (!doc) { document.body.removeChild(iframe); return; }
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 300);
   };
 
   // ─── Render ────────────────────────────────────────────────
