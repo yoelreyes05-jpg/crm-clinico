@@ -18,8 +18,12 @@ import {
   ChevronRight,
   Stethoscope,
   Heart,
+  Wallet,
+  ShieldCheck,
+  KeyRound,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { PERMISOS_POR_DEFECTO } from "@/types";
 import styles from "./layout.module.css";
 
 interface MenuItem {
@@ -34,6 +38,8 @@ const adminMenuItems: MenuItem[] = [
   { href: "/dashboard/medicos", label: "Médicos", icon: <Stethoscope size={20} />, key: "medicos" },
   { href: "/dashboard/pacientes", label: "Pacientes", icon: <Users size={20} />, key: "pacientes" },
   { href: "/dashboard/citas", label: "Citas", icon: <Calendar size={20} />, key: "citas" },
+  { href: "/dashboard/contabilidad", label: "Contabilidad", icon: <Wallet size={20} />, key: "contabilidad" },
+  { href: "/dashboard/permisos", label: "Permisos", icon: <KeyRound size={20} />, key: "permisos" },
   { href: "/dashboard/reportes", label: "Reportes", icon: <FileText size={20} />, key: "reportes" },
 ];
 
@@ -47,21 +53,61 @@ const medicoMenuItems: MenuItem[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { usuario, loading, logout } = useAuth();
+  const { usuario, token, loading, logout } = useAuth();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Permisos del médico (el admin los controla en /dashboard/permisos).
+  // Si no hay registro en BD se aplican los permisos por defecto.
+  const [permisos, setPermisos] = useState(PERMISOS_POR_DEFECTO);
+
+  useEffect(() => {
+    if (!usuario || !token || usuario.rol !== "medico") return;
+    fetch("/api/permisos", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : { data: [] }))
+      .then((d) => {
+        const p = (d.data || [])[0];
+        if (p) {
+          setPermisos({
+            acceso_modulo: p.acceso_modulo,
+            acceso_contabilidad: p.acceso_contabilidad,
+            acceso_seguros: p.acceso_seguros,
+            acceso_reportes: p.acceso_reportes,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [usuario, token]);
 
   if (loading) return <LoadingScreen />;
   if (!usuario) return null;
 
-  // Menú base + ítems de especialidad dinámica
+  // Menú base + ítems de especialidad dinámica (controlados por permisos)
   const especialidadItems: MenuItem[] = [];
-  if (usuario.rol === "medico" && usuario.especialidad === "ginecologia") {
+  if (usuario.rol === "medico" && usuario.especialidad === "ginecologia" && permisos.acceso_modulo) {
     especialidadItems.push({
       href: "/dashboard/historial-ginecologia",
       label: "Ficha Ginecológica",
       icon: <Heart size={20} />,
       key: "historial-ginecologia",
+    });
+  }
+  // Pestaña de contabilidad del médico (dinero + lo que debe la ARS)
+  if (usuario.rol === "medico" && permisos.acceso_contabilidad) {
+    especialidadItems.push({
+      href: "/dashboard/contabilidad",
+      label: "Contabilidad",
+      icon: <Wallet size={20} />,
+      key: "contabilidad",
+    });
+  }
+  // Módulo de seguros/autorizaciones ARS
+  if (usuario.rol === "medico" && permisos.acceso_seguros) {
+    especialidadItems.push({
+      href: "/dashboard/seguros",
+      label: "Seguros / ARS",
+      icon: <ShieldCheck size={20} />,
+      key: "seguros",
     });
   }
 
