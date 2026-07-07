@@ -71,26 +71,18 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const {
-      fecha_cita,
-      duracion_minutos,
-      motivo_cita,
-      notas,
-      estado,
-      visto_paciente,
-    } = body;
+    const permitidos = [
+      "fecha_cita", "duracion_minutos", "motivo_cita", "notas", "estado",
+      "visto_paciente", "tipo_paciente", "monto_estimado", "seguro_validado",
+    ];
+    const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+    for (const campo of permitidos) {
+      if (body[campo] !== undefined) updates[campo] = body[campo];
+    }
 
     const { data: cita, error } = await supabase
       .from("citas")
-      .update({
-        fecha_cita,
-        duracion_minutos,
-        motivo_cita,
-        notas,
-        estado,
-        visto_paciente,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq("id", params.id)
       .select()
       .single();

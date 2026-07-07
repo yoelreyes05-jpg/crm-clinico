@@ -10,7 +10,7 @@ export interface Usuario {
   email: string;
   nombre_completo: string;
   cedula?: string;
-  rol: "admin" | "medico";
+  rol: "admin" | "medico" | "secretaria";
   especialidad?: string;
   licencia_medica?: string;
   telefono?: string;
@@ -28,7 +28,7 @@ export interface UsuarioSession {
   id: string;
   email: string;
   nombre_completo: string;
-  rol: "admin" | "medico";
+  rol: "admin" | "medico" | "secretaria";
   especialidad?: string;
   licencia_medica?: string;
   token?: string;
@@ -67,6 +67,15 @@ export interface Paciente {
 // ============================================================
 // CITAS
 // ============================================================
+export type EstadoCita =
+  | "programada"
+  | "en_espera"
+  | "en_consulta"
+  | "finalizada"
+  | "completada" // legado, equivale a finalizada
+  | "cancelada"
+  | "no_asistio";
+
 export interface Cita {
   id: string;
   paciente_id: string;
@@ -74,13 +83,26 @@ export interface Cita {
   especialidad: string;
   fecha_cita: string;
   duracion_minutos: number;
+  tipo_paciente?: "asegurado" | "privado";
+  monto_estimado?: number;
+  seguro_validado?: "no_aplica" | "pendiente" | "validado" | "rechazado";
   motivo_cita?: string;
   notas?: string;
-  estado: "programada" | "completada" | "cancelada";
+  estado: EstadoCita;
   visto_paciente: boolean;
   created_at: string;
   updated_at: string;
 }
+
+export const ESTADOS_CITA_ETIQUETAS: Record<string, { label: string; color: string }> = {
+  programada: { label: "Pendiente", color: "#d97706" },
+  en_espera: { label: "En Espera", color: "#0284c7" },
+  en_consulta: { label: "En Consulta", color: "#7c3aed" },
+  finalizada: { label: "Finalizada", color: "#16a34a" },
+  completada: { label: "Finalizada", color: "#16a34a" },
+  cancelada: { label: "Cancelada", color: "#dc2626" },
+  no_asistio: { label: "No Asistió", color: "#64748b" },
+};
 
 // ============================================================
 // HISTORIALES CLÍNICOS
@@ -323,6 +345,12 @@ export interface PermisoEspecialidad {
   acceso_contabilidad: boolean;
   acceso_seguros: boolean;
   acceso_reportes: boolean;
+  acceso_citas: boolean;
+  acceso_pacientes: boolean;
+  acceso_facturacion: boolean;
+  acceso_cxc: boolean;
+  acceso_finanzas: boolean;
+  acceso_libros: boolean;
   otorgado_por?: string;
   notas?: string;
   created_at?: string;
@@ -336,7 +364,134 @@ export const PERMISOS_POR_DEFECTO = {
   acceso_contabilidad: true,
   acceso_seguros: true,
   acceso_reportes: false,
+  acceso_citas: true,
+  acceso_pacientes: true,
+  acceso_facturacion: true,
+  acceso_cxc: false,
+  acceso_finanzas: false,
+  acceso_libros: false,
 };
+
+export const PERMISOS_ETIQUETAS: Record<string, string> = {
+  acceso_modulo: "Módulo de especialidad",
+  acceso_citas: "Citas",
+  acceso_pacientes: "Pacientes",
+  acceso_contabilidad: "Contabilidad",
+  acceso_seguros: "Seguros / ARS",
+  acceso_facturacion: "Facturación",
+  acceso_cxc: "Cuentas por Cobrar",
+  acceso_finanzas: "Dashboard Financiero",
+  acceso_libros: "Libros Contables",
+  acceso_reportes: "Reportes avanzados",
+};
+
+// ============================================================
+// VALIDACIÓN DE COBERTURA (integración ARS)
+// ============================================================
+export interface ValidacionCobertura {
+  id: string;
+  paciente_id: string;
+  seguro_paciente_id?: string;
+  aseguradora_id: string;
+  cita_id?: string;
+  validado_por?: string;
+  estado: "pendiente" | "validado" | "rechazado" | "error";
+  cobertura_aprobada: boolean;
+  copago: number;
+  deducible: number;
+  monto_autorizado: number;
+  numero_autorizacion?: string;
+  fecha_validacion?: string;
+  via: "api" | "manual";
+  notas?: string;
+  created_at?: string;
+  aseguradora?: Aseguradora;
+}
+
+export interface PlanARS {
+  id: string;
+  aseguradora_id: string;
+  nombre: string;
+  descripcion?: string;
+  copago_defecto: number;
+  cobertura_pct: number;
+  estado: boolean;
+}
+
+export interface TarifaARS {
+  id: string;
+  aseguradora_id: string;
+  codigo?: string;
+  descripcion: string;
+  tarifa: number;
+  copago: number;
+  estado: boolean;
+}
+
+// ============================================================
+// FACTURACIÓN
+// ============================================================
+export interface Factura {
+  id: string;
+  numero_factura: string;
+  ncf?: string;
+  cita_id?: string;
+  historial_id?: string;
+  paciente_id: string;
+  medico_id: string;
+  aseguradora_id?: string;
+  validacion_id?: string;
+  reclamacion_id?: string;
+  especialidad?: string;
+  descripcion: string;
+  subtotal: number;
+  descuento: number;
+  itbis: number;
+  total: number;
+  monto_paciente: number;
+  monto_ars: number;
+  pagado_paciente: number;
+  pagado_ars: number;
+  metodo_pago_paciente?: string;
+  estado: "emitida" | "parcial" | "pagada" | "anulada";
+  fecha_emision: string;
+  created_at?: string;
+  paciente?: Paciente;
+  aseguradora?: Aseguradora;
+  medico?: Usuario;
+}
+
+// ============================================================
+// CONTABILIDAD (asientos)
+// ============================================================
+export interface CuentaContable {
+  id: string;
+  codigo: string;
+  nombre: string;
+  tipo: "activo" | "pasivo" | "capital" | "ingreso" | "gasto";
+  estado: boolean;
+}
+
+export interface PartidaContable {
+  id: string;
+  asiento_id: string;
+  cuenta_codigo: string;
+  debe: number;
+  haber: number;
+  cuenta?: CuentaContable;
+}
+
+export interface AsientoContable {
+  id: string;
+  numero_asiento: number;
+  fecha: string;
+  descripcion: string;
+  referencia_tipo?: string;
+  referencia_id?: string;
+  medico_id?: string;
+  partidas?: PartidaContable[];
+  created_at?: string;
+}
 
 // ============================================================
 // RESUMEN FINANCIERO (para la pestaña de contabilidad)

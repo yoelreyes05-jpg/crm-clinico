@@ -20,8 +20,9 @@ export async function GET(request: NextRequest) {
     const tipo = searchParams.get("tipo");
     const medicoIdParam = searchParams.get("medico_id");
 
-    // Médico solo ve lo suyo; admin puede ver todo o filtrar por médico
-    const medicoId = auth.rol === "admin" ? medicoIdParam : auth.id;
+    // Médico solo ve lo suyo; admin/secretaria pueden ver todo o filtrar por médico
+    const esStaff = auth.rol === "admin" || auth.rol === "secretaria";
+    const medicoId = esStaff ? medicoIdParam : auth.id;
 
     let query = supabase
       .from("movimientos_financieros")
@@ -99,8 +100,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "El monto no puede ser negativo" }, { status: 400 });
     }
 
-    // El médico registra a su nombre; el admin puede registrar para un médico
-    const medico_id = auth.rol === "admin" && body.medico_id ? body.medico_id : auth.id;
+    // El médico registra a su nombre; admin/secretaria pueden registrar para un médico
+    const esStaff = auth.rol === "admin" || auth.rol === "secretaria";
+    const medico_id = esStaff && body.medico_id ? body.medico_id : auth.id;
     const especialidad = body.especialidad || auth.especialidad || "general";
 
     const { data, error } = await supabase

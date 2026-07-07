@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("citas")
       .select(`
-        id, especialidad, fecha_cita, duracion_minutos, tipo_paciente,
+        id, paciente_id, medico_id, especialidad, fecha_cita, duracion_minutos, tipo_paciente,
+        monto_estimado, seguro_validado,
         motivo_cita, estado, notas, visto_paciente, created_at,
         pacientes (id, nombre_completo, cedula),
         usuarios_clinica (id, nombre_completo, especialidad)
@@ -69,12 +70,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const auth = verifyAuth(request);
-    if (!auth || auth.rol !== "medico") {
+    if (!auth || (auth.rol !== "medico" && auth.rol !== "secretaria" && auth.rol !== "admin")) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     const body = await request.json();
     const { paciente_id, medico_id, especialidad, fecha_cita, duracion_minutos, motivo_cita, notas, tipo_paciente } = body;
+
+    // Secretaria y admin deben indicar el médico de la cita
+    if (auth.rol !== "medico" && !medico_id) {
+      return NextResponse.json({ error: "Selecciona el médico de la cita" }, { status: 400 });
+    }
 
     if (!paciente_id || !fecha_cita) {
       return NextResponse.json({ error: "Paciente y fecha son requeridos" }, { status: 400 });
@@ -104,6 +110,8 @@ export async function POST(request: NextRequest) {
         fecha_cita,
         duracion_minutos: duracion_minutos || 30,
         tipo_paciente: tipo_paciente === "asegurado" ? "asegurado" : "privado",
+        monto_estimado: Number(body.monto_estimado || 0),
+        seguro_validado: tipo_paciente === "asegurado" ? (body.seguro_validado || "pendiente") : "no_aplica",
         motivo_cita: motivo_cita || null,
         notas: notas || null,
         estado: "programada",

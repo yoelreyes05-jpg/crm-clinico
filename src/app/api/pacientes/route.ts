@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // Admin ve todos los pacientes activos
-    if (auth.rol === "admin") {
+    // Admin y secretaria ven todos los pacientes activos
+    if (auth.rol === "admin" || auth.rol === "secretaria") {
       const { data, error } = await supabase
         .from("pacientes")
         .select("*")
@@ -113,11 +113,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const auth = verifyAuth(request);
-    if (!auth || auth.rol !== "medico") {
-      return NextResponse.json(
-        { error: "No autorizado — solo médicos pueden crear pacientes" },
-        { status: 401 }
-      );
+    if (!auth || !["medico", "secretaria", "admin"].includes(auth.rol)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     const body = await request.json();

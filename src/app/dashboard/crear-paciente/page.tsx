@@ -42,7 +42,7 @@ export default function CrearPacientePage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!isAuthenticated || usuario?.rol !== "medico") {
+    if (!isAuthenticated || !usuario || !["medico", "secretaria", "admin"].includes(usuario.rol)) {
       router.push("/login");
     }
   }, [isAuthenticated, usuario, authLoading, router]);

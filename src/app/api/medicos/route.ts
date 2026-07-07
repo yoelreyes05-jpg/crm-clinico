@@ -48,17 +48,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // Admin ve todos los campos; médico solo puede ver lista básica (para agendar citas)
+    // Admin ve todos los campos; médico/secretaria solo lista básica (para agendar citas)
     const selectFields = auth.rol === "admin"
-      ? "id, nombre_completo, email, especialidad, licencia_medica, telefono, estado, created_at"
+      ? "id, nombre_completo, email, especialidad, licencia_medica, telefono, estado, rol, created_at"
       : "id, nombre_completo, especialidad";
 
-    const { data, error } = await supabase
+    // ?todos=1 (solo admin): incluye también secretarias (para el panel de permisos)
+    const { searchParams } = new URL(request.url);
+    const incluirTodos = auth.rol === "admin" && searchParams.get("todos") === "1";
+
+    let query = supabase
       .from("usuarios_clinica")
       .select(selectFields)
-      .eq("rol", "medico")
       .eq("estado", true)
       .order("nombre_completo", { ascending: true });
+
+    query = incluirTodos ? query.in("rol", ["medico", "secretaria"]) : query.eq("rol", "medico");
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error obteniendo médicos:", error);
@@ -116,8 +123,8 @@ export async function POST(request: NextRequest) {
         nombre_completo,
         email,
         password_hash: passwordHash,   // columna correcta de usuarios_clinica
-        rol: "medico",                 // siempre médico al crear desde admin
-        especialidad: especialidad || null,
+        rol: body.rol === "secretaria" ? "secretaria" : "medico",
+        especialidad: body.rol === "secretaria" ? null : (especialidad || null),
         licencia_medica: licencia_medica || null,
         telefono: telefono || null,
         estado: true,

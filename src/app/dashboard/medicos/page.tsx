@@ -34,6 +34,7 @@ export default function MedicosPage() {
     nombre_completo: "",
     email: "",
     password: "",
+    rol: "medico",
     especialidad: "",
     licencia_medica: "",
     telefono: "",
@@ -93,6 +94,7 @@ export default function MedicosPage() {
           nombre_completo: "",
           email: "",
           password: "",
+          rol: "medico",
           especialidad: "",
           licencia_medica: "",
           telefono: "",
@@ -195,6 +197,7 @@ export default function MedicosPage() {
                 nombre_completo: "",
                 email: "",
                 password: "",
+                rol: "medico",
                 especialidad: "",
                 licencia_medica: "",
                 telefono: "",
@@ -239,12 +242,22 @@ export default function MedicosPage() {
                 required
               />
             )}
+            {!editingId && (
+              <select
+                value={formData.rol}
+                onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
+              >
+                <option value="medico">Rol: Médico</option>
+                <option value="secretaria">Rol: Secretaria</option>
+              </select>
+            )}
             <select
               value={formData.especialidad}
               onChange={(e) =>
                 setFormData({ ...formData, especialidad: e.target.value })
               }
-              required
+              required={formData.rol === "medico"}
+              disabled={formData.rol === "secretaria"}
             >
               <option value="">Seleccionar especialidad</option>
               <option value="cardiologia">Cardiología</option>
@@ -286,6 +299,7 @@ export default function MedicosPage() {
                     nombre_completo: "",
                     email: "",
                     password: "",
+                    rol: "medico",
                     especialidad: "",
                     licencia_medica: "",
                     telefono: "",
@@ -409,6 +423,7 @@ export default function MedicosPage() {
                             nombre_completo: medico.nombre_completo,
                             email: medico.email,
                             password: "",
+                            rol: "medico",
                             especialidad: medico.especialidad,
                             licencia_medica: medico.licencia_medica || "",
                             telefono: medico.telefono || "",

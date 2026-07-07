@@ -54,7 +54,7 @@ export default function ContabilidadPage() {
     notas: "",
   });
 
-  const esAdmin = usuario?.rol === "admin";
+  const esAdmin = usuario?.rol === "admin" || usuario?.rol === "secretaria";
 
   const cargarDatos = useCallback(async () => {
     if (!token) return;

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const estado = searchParams.get("estado");
     const medicoIdParam = searchParams.get("medico_id");
 
-    const medicoId = auth.rol === "admin" ? medicoIdParam : auth.id;
+    const medicoId = auth.rol === "admin" || auth.rol === "secretaria" ? medicoIdParam : auth.id;
 
     let query = supabase
       .from("reclamaciones_ars")
