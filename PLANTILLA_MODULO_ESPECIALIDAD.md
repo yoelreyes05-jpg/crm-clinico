@@ -2,7 +2,9 @@
 
 Guía completa para agregar una nueva especialidad al CRM Clínico con **contabilidad**, **seguros/autorizaciones ARS** y **permisos** ya integrados. Sigue estos pasos en orden cada vez que toque crear un módulo nuevo (ej: cardiología, pediatría, urología).
 
-> Las tablas de contabilidad (`movimientos_financieros`), seguros (`autorizaciones_seguro`, `reclamaciones_ars`, `seguros_pacientes`, `aseguradoras`) y permisos (`permisos_especialidades`) son **compartidas entre todas las especialidades** — se filtran por `medico_id` y `especialidad`. NO hay que crear tablas financieras nuevas por especialidad; solo la tabla clínica específica.
+> Las tablas de contabilidad (`movimientos_financieros`), seguros (`autorizaciones_seguro`, `reclamaciones_ars`, `seguros_pacientes`, `aseguradoras`), facturación (`facturas_clinica`) y permisos (`permisos_especialidades`) son **compartidas entre todas las especialidades** — se filtran por `medico_id` y `especialidad`. NO hay que crear tablas financieras nuevas por especialidad; solo la tabla clínica específica.
+
+> **⚠️ REGLA DE AISLAMIENTO POR MÉDICO:** puede haber varios médicos en la misma especialidad (ej. dos ginecólogos). Cada uno tiene su propio `id` (UUID) y **NUNCA ve la información del otro**: todas las APIs filtran por `medico_id = auth.id` (pacientes, citas, historiales, contabilidad, facturas, reclamaciones, autorizaciones, seguros de pacientes, finanzas). Al crear un módulo o API nuevo, SIEMPRE filtrar por `medico_id`, jamás por `especialidad` sola. Al crear el médico desde el panel admin, sus módulos (permisos, contabilidad, seguros, facturación, citas, Mi Secretaria) se generan automáticamente con su propio ID.
 
 ---
 

@@ -148,8 +148,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Error al crear médico: ${error.message}` }, { status: 500 });
     }
 
+    // ========================================================
+    // Crear automáticamente los módulos del nuevo usuario:
+    // registro de permisos propio (cada médico tiene su ID y
+    // NUNCA ve datos de otro, aunque compartan especialidad —
+    // todas las APIs filtran por medico_id).
+    // Con esto quedan activos: citas, pacientes, contabilidad,
+    // seguros/ARS, facturación y su módulo de especialidad,
+    // más la opción "Mi Secretaria".
+    // ========================================================
+    const esSecretariaNueva = (data as any).rol === "secretaria";
+    await supabase.from("permisos_especialidades").upsert([{
+      medico_id: (data as any).id,
+      especialidad: esSecretariaNueva ? "secretaria" : ((data as any).especialidad || "general"),
+      acceso_modulo: !esSecretariaNueva,
+      acceso_citas: true,
+      acceso_pacientes: true,
+      acceso_contabilidad: true,
+      acceso_seguros: !esSecretariaNueva,
+      acceso_facturacion: true,
+      acceso_cxc: false,
+      acceso_finanzas: false,
+      acceso_libros: false,
+      acceso_reportes: false,
+      otorgado_por: auth.id,
+      updated_at: new Date().toISOString(),
+    }], { onConflict: "medico_id,especialidad" });
+
     return NextResponse.json(
-      { data, message: "Médico creado exitosamente" },
+      { data, message: "Usuario creado con todos sus módulos (contabilidad, seguros, facturación, citas y permisos propios)" },
       { status: 201 }
     );
   } catch (error: any) {

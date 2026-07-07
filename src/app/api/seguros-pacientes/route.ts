@@ -6,7 +6,22 @@ export const dynamic = "force-dynamic";
 // POST /api/seguros-pacientes → registrar seguro de paciente
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth, supabaseAdmin as supabase } from "@/lib/api-auth";
+import { verifyAuth, obtenerMedicoAsignado, supabaseAdmin as supabase } from "@/lib/api-auth";
+
+// IDs de los pacientes que pertenecen a un médico
+// (registrados por él, con citas o con historiales suyos)
+async function pacientesDelMedico(medicoId: string): Promise<string[]> {
+  const ids = new Set<string>();
+  const [porRegistro, porCitas, porHistoriales] = await Promise.all([
+    supabase.from("pacientes").select("id").eq("medico_id", medicoId),
+    supabase.from("citas").select("paciente_id").eq("medico_id", medicoId),
+    supabase.from("historiales_clinicos").select("paciente_id").eq("medico_id", medicoId),
+  ]);
+  (porRegistro.data || []).forEach((p: any) => ids.add(p.id));
+  (porCitas.data || []).forEach((c: any) => c.paciente_id && ids.add(c.paciente_id));
+  (porHistoriales.data || []).forEach((h: any) => h.paciente_id && ids.add(h.paciente_id));
+  return Array.from(ids);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,6 +38,19 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (pacienteId) query = query.eq("paciente_id", pacienteId);
+
+    // Aislamiento por médico: cada médico solo ve los seguros de SUS
+    // pacientes (aunque otro médico sea de la misma especialidad).
+    // Secretaria asignada → los del médico asignado. Admin → todo.
+    let medicoScope: string | null = null;
+    if (auth.rol === "medico") medicoScope = auth.id;
+    else if (auth.rol === "secretaria") medicoScope = await obtenerMedicoAsignado(auth);
+
+    if (medicoScope && !pacienteId) {
+      const ids = await pacientesDelMedico(medicoScope);
+      if (ids.length === 0) return NextResponse.json({ data: [] });
+      query = query.in("paciente_id", ids);
+    }
 
     const { data, error } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
