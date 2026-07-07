@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
+import { Save, AlertCircle, CheckCircle } from "lucide-react";
 import styles from "./crearPaciente.module.css";
 
 interface AseguradoraOption {
@@ -168,12 +168,8 @@ export default function CrearPacientePage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => router.back()}>
-          <ArrowLeft size={20} />
-          <span>Volver</span>
-        </button>
         <div>
-          <h1>Nuevo Paciente</h1>
+          <h1>NUEVO PACIENTE</h1>
           <p className={styles.subtitle}>Registra los datos del paciente</p>
         </div>
       </div>
