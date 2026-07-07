@@ -272,6 +272,76 @@ export default function CrearPacientePage() {
                 </select>
               </div>
             </div>
+
+            {/* ===== ARS (debajo de Tipo de Sangre) ===== */}
+            <div className={styles.grid3}>
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>ARS</label>
+                <select
+                  className={styles.select}
+                  value={esAsegurado ? "asegurado" : "privado"}
+                  onChange={(e) => {
+                    const asegurado = e.target.value === "asegurado";
+                    setEsAsegurado(asegurado);
+                    if (!asegurado) {
+                      setSeguroData({ aseguradora_id: "", numero_afiliado: "", plan: "" });
+                    }
+                  }}
+                >
+                  <option value="privado">Privado</option>
+                  <option value="asegurado">Asegurado</option>
+                </select>
+              </div>
+
+              {esAsegurado && (
+                <>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>Tipo de ARS *</label>
+                    <select
+                      className={styles.select}
+                      value={seguroData.aseguradora_id}
+                      onChange={(e) =>
+                        setSeguroData({ ...seguroData, aseguradora_id: e.target.value })
+                      }
+                    >
+                      <option value="">Seleccionar ARS</option>
+                      {aseguradoras.map((a) => (
+                        <option key={a.id} value={a.id}>{a.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>No. de Afiliado (NSS)</label>
+                    <input
+                      className={styles.input}
+                      type="text"
+                      placeholder="Si se deja vacío, se usa la cédula"
+                      value={seguroData.numero_afiliado}
+                      onChange={(e) =>
+                        setSeguroData({ ...seguroData, numero_afiliado: e.target.value })
+                      }
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {esAsegurado && (
+              <div className={styles.grid3}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label}>Plan</label>
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Básico, Complementario..."
+                    value={seguroData.plan}
+                    onChange={(e) =>
+                      setSeguroData({ ...seguroData, plan: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
           <section className={styles.section}>
@@ -324,82 +394,6 @@ export default function CrearPacientePage() {
                 />
               </div>
             </div>
-          </section>
-
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>🛡️</span>
-              Seguro Médico
-            </h2>
-
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>¿El paciente es asegurado?</label>
-              <div className={styles.seguroChecklist}>
-                <label className={styles.seguroCheckItem}>
-                  <input
-                    type="checkbox"
-                    checked={esAsegurado}
-                    onChange={() => setEsAsegurado(true)}
-                  />
-                  <span>Sí, asegurado (ARS)</span>
-                </label>
-                <label className={styles.seguroCheckItem}>
-                  <input
-                    type="checkbox"
-                    checked={!esAsegurado}
-                    onChange={() => {
-                      setEsAsegurado(false);
-                      setSeguroData({ aseguradora_id: "", numero_afiliado: "", plan: "" });
-                    }}
-                  />
-                  <span>No, privado</span>
-                </label>
-              </div>
-            </div>
-
-            {esAsegurado && (
-              <div className={styles.grid3}>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label}>ARS *</label>
-                  <select
-                    className={styles.select}
-                    value={seguroData.aseguradora_id}
-                    onChange={(e) =>
-                      setSeguroData({ ...seguroData, aseguradora_id: e.target.value })
-                    }
-                  >
-                    <option value="">Seleccionar ARS</option>
-                    {aseguradoras.map((a) => (
-                      <option key={a.id} value={a.id}>{a.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label}>No. de Afiliado (NSS)</label>
-                  <input
-                    className={styles.input}
-                    type="text"
-                    placeholder="Si se deja vacío, se usa la cédula"
-                    value={seguroData.numero_afiliado}
-                    onChange={(e) =>
-                      setSeguroData({ ...seguroData, numero_afiliado: e.target.value })
-                    }
-                  />
-                </div>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label}>Plan</label>
-                  <input
-                    className={styles.input}
-                    type="text"
-                    placeholder="Básico, Complementario..."
-                    value={seguroData.plan}
-                    onChange={(e) =>
-                      setSeguroData({ ...seguroData, plan: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            )}
           </section>
 
           <div className={styles.formButtons}>
