@@ -46,6 +46,14 @@ export async function GET(request: NextRequest) {
     // Filtros según rol
     if (auth.rol === "medico") {
       query = query.eq("medico_id", auth.id);
+    } else if (auth.rol === "secretaria") {
+      // Secretaria asignada a un médico → solo las citas de ese médico
+      const { data: yo } = await supabase
+        .from("usuarios_clinica")
+        .select("asignado_a")
+        .eq("id", auth.id)
+        .single();
+      if (yo?.asignado_a) query = query.eq("medico_id", yo.asignado_a);
     }
     if (pacienteId) {
       query = query.eq("paciente_id", pacienteId);

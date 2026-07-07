@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 // POST /api/contabilidad → crear movimiento
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth, supabaseAdmin as supabase } from "@/lib/api-auth";
+import { verifyAuth, obtenerMedicoAsignado, supabaseAdmin as supabase } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,9 +20,14 @@ export async function GET(request: NextRequest) {
     const tipo = searchParams.get("tipo");
     const medicoIdParam = searchParams.get("medico_id");
 
-    // Médico solo ve lo suyo; admin/secretaria pueden ver todo o filtrar por médico
+    // Médico solo ve lo suyo; admin ve todo; secretaria asignada
+    // solo ve lo de su médico (sin asignar = toda la clínica)
     const esStaff = auth.rol === "admin" || auth.rol === "secretaria";
-    const medicoId = esStaff ? medicoIdParam : auth.id;
+    let medicoId = esStaff ? medicoIdParam : auth.id;
+    if (auth.rol === "secretaria") {
+      const asignado = await obtenerMedicoAsignado(auth);
+      if (asignado) medicoId = asignado;
+    }
 
     let query = supabase
       .from("movimientos_financieros")

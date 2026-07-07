@@ -30,3 +30,18 @@ export function verifyAuth(request: NextRequest): JwtPayload | null {
     return null;
   }
 }
+
+/**
+ * Si el usuario es una secretaria asignada a un médico, devuelve
+ * el id de ese médico (su vista queda limitada a él).
+ * Secretaria sin asignar (de toda la clínica) → null (ve todo).
+ */
+export async function obtenerMedicoAsignado(auth: JwtPayload): Promise<string | null> {
+  if (auth.rol !== "secretaria") return null;
+  const { data } = await supabaseAdmin
+    .from("usuarios_clinica")
+    .select("asignado_a")
+    .eq("id", auth.id)
+    .single();
+  return data?.asignado_a || null;
+}

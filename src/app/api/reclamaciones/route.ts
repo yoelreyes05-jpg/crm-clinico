@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 // POST /api/reclamaciones → crear reclamación
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth, supabaseAdmin as supabase } from "@/lib/api-auth";
+import { verifyAuth, obtenerMedicoAsignado, supabaseAdmin as supabase } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
     const estado = searchParams.get("estado");
     const medicoIdParam = searchParams.get("medico_id");
 
-    const medicoId = auth.rol === "admin" || auth.rol === "secretaria" ? medicoIdParam : auth.id;
+    let medicoId = auth.rol === "admin" || auth.rol === "secretaria" ? medicoIdParam : auth.id;
+    if (auth.rol === "secretaria") {
+      const asignado = await obtenerMedicoAsignado(auth);
+      if (asignado) medicoId = asignado;
+    }
 
     let query = supabase
       .from("reclamaciones_ars")

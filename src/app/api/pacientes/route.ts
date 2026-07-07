@@ -42,8 +42,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // Admin y secretaria ven todos los pacientes activos
-    if (auth.rol === "admin" || auth.rol === "secretaria") {
+    // Secretaria asignada a un médico → ve los pacientes de ese médico
+    let idFiltro = auth.id;
+    if (auth.rol === "secretaria") {
+      const { data: yo } = await supabase
+        .from("usuarios_clinica")
+        .select("asignado_a")
+        .eq("id", auth.id)
+        .single();
+      idFiltro = yo?.asignado_a || "";
+    }
+
+    // Admin y secretaria SIN asignar ven todos los pacientes activos
+    if (auth.rol === "admin" || (auth.rol === "secretaria" && !idFiltro)) {
       const { data, error } = await supabase
         .from("pacientes")
         .select("*")
@@ -54,14 +65,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data });
     }
 
-    // Médico: recopilar IDs de pacientes que le pertenecen
+    // Médico (o secretaria asignada): pacientes que pertenecen al médico
+    const medicoIdScope = auth.rol === "secretaria" ? idFiltro : auth.id;
     const patientIdSet = new Set<string>();
 
     // 1. Pacientes creados directamente por este médico (vía medico_id)
     const { data: porMedicoId } = await supabase
       .from("pacientes")
       .select("id")
-      .eq("medico_id", auth.id);
+      .eq("medico_id", medicoIdScope);
 
     (porMedicoId || []).forEach((p: any) => patientIdSet.add(p.id));
 
@@ -69,7 +81,7 @@ export async function GET(request: NextRequest) {
     const { data: porCitas } = await supabase
       .from("citas")
       .select("paciente_id")
-      .eq("medico_id", auth.id);
+      .eq("medico_id", medicoIdScope);
 
     (porCitas || []).forEach((c: any) => {
       if (c.paciente_id) patientIdSet.add(c.paciente_id);
@@ -79,7 +91,7 @@ export async function GET(request: NextRequest) {
     const { data: porHistoriales } = await supabase
       .from("historiales_clinicos")
       .select("paciente_id")
-      .eq("medico_id", auth.id);
+      .eq("medico_id", medicoIdScope);
 
     (porHistoriales || []).forEach((h: any) => {
       if (h.paciente_id) patientIdSet.add(h.paciente_id);

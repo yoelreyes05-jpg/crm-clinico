@@ -14,6 +14,8 @@ interface Medico {
   licencia_medica?: string;
   telefono?: string;
   estado: boolean;
+  rol?: string;
+  asignado_a?: string;
 }
 
 export default function MedicosPage() {
@@ -38,6 +40,7 @@ export default function MedicosPage() {
     especialidad: "",
     licencia_medica: "",
     telefono: "",
+    asignado_a: "",
   });
 
   useEffect(() => {
@@ -54,7 +57,7 @@ export default function MedicosPage() {
   const cargarMedicos = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/medicos", {
+      const response = await fetch("/api/medicos?todos=1", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -74,8 +77,25 @@ export default function MedicosPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingId ? `/api/medicos/${editingId}` : "/api/medicos";
+      // Las secretarias se editan por su propia API (permite reasignar médico)
+      const filaEditada = editingId ? medicos.find((m) => m.id === editingId) : null;
+      const esSecretariaEditada = filaEditada?.rol === "secretaria";
+
+      const url = editingId
+        ? esSecretariaEditada
+          ? `/api/secretarias/${editingId}`
+          : `/api/medicos/${editingId}`
+        : "/api/medicos";
       const method = editingId ? "PUT" : "POST";
+
+      const body: Record<string, any> = { ...formData };
+      if (esSecretariaEditada) {
+        body.asignado_a = formData.asignado_a || null;
+        delete body.especialidad;
+        delete body.licencia_medica;
+        delete body.rol;
+        if (!body.password) delete body.password;
+      }
 
       const response = await fetch(url, {
         method,
@@ -83,7 +103,7 @@ export default function MedicosPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -98,6 +118,7 @@ export default function MedicosPage() {
           especialidad: "",
           licencia_medica: "",
           telefono: "",
+          asignado_a: "",
         });
         cargarMedicos();
       } else {
@@ -160,23 +181,28 @@ export default function MedicosPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este médico?")) return;
+    const fila = medicos.find((m) => m.id === id);
+    const esSecretaria = fila?.rol === "secretaria";
+    if (!confirm(`¿Estás seguro de que deseas eliminar est${esSecretaria ? "a secretaria" : "e médico"}?`)) return;
 
     try {
-      const response = await fetch(`/api/medicos/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        esSecretaria ? `/api/secretarias/${id}` : `/api/medicos/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
-        alert("Médico eliminado");
+        alert(esSecretaria ? "Secretaria desactivada" : "Médico eliminado");
         cargarMedicos();
       }
     } catch (error) {
-      console.error("Error eliminando médico:", error);
-      alert("Error al eliminar médico");
+      console.error("Error eliminando:", error);
+      alert("Error al eliminar");
     }
   };
 
@@ -201,6 +227,7 @@ export default function MedicosPage() {
                 especialidad: "",
                 licencia_medica: "",
                 telefono: "",
+                asignado_a: "",
               });
             }
           }}
@@ -249,6 +276,21 @@ export default function MedicosPage() {
               >
                 <option value="medico">Rol: Médico</option>
                 <option value="secretaria">Rol: Secretaria</option>
+              </select>
+            )}
+            {formData.rol === "secretaria" && (
+              <select
+                value={formData.asignado_a}
+                onChange={(e) => setFormData({ ...formData, asignado_a: e.target.value })}
+              >
+                <option value="">Sin asignar (toda la clínica)</option>
+                {medicos
+                  .filter((m) => (m.rol || "medico") === "medico")
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      Asignada a: {m.nombre_completo}
+                    </option>
+                  ))}
               </select>
             )}
             <select
@@ -303,6 +345,7 @@ export default function MedicosPage() {
                     especialidad: "",
                     licencia_medica: "",
                     telefono: "",
+                    asignado_a: "",
                   });
                 }}
               >
@@ -411,7 +454,11 @@ export default function MedicosPage() {
                   <tr key={medico.id}>
                     <td>{medico.nombre_completo}</td>
                     <td>{medico.email}</td>
-                    <td>{medico.especialidad}</td>
+                    <td>
+                      {medico.rol === "secretaria"
+                        ? `🗂️ Secretaria${medico.asignado_a ? ` de ${medicos.find((m) => m.id === medico.asignado_a)?.nombre_completo || "—"}` : " (clínica)"}`
+                        : medico.especialidad}
+                    </td>
                     <td>{medico.licencia_medica || "-"}</td>
                     <td>{medico.telefono || "-"}</td>
                     <td className={styles.actions}>
@@ -423,10 +470,11 @@ export default function MedicosPage() {
                             nombre_completo: medico.nombre_completo,
                             email: medico.email,
                             password: "",
-                            rol: "medico",
-                            especialidad: medico.especialidad,
+                            rol: medico.rol || "medico",
+                            especialidad: medico.especialidad || "",
                             licencia_medica: medico.licencia_medica || "",
                             telefono: medico.telefono || "",
+                            asignado_a: medico.asignado_a || "",
                           });
                           setShowForm(true);
                         }}

@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // Admin ve todos los campos; médico/secretaria solo lista básica (para agendar citas)
     const selectFields = auth.rol === "admin"
-      ? "id, nombre_completo, email, especialidad, licencia_medica, telefono, estado, rol, created_at"
+      ? "id, nombre_completo, email, especialidad, licencia_medica, telefono, estado, rol, asignado_a, created_at"
       : "id, nombre_completo, especialidad";
 
     // ?todos=1 (solo admin): incluye también secretarias (para el panel de permisos)
@@ -64,6 +64,16 @@ export async function GET(request: NextRequest) {
       .order("nombre_completo", { ascending: true });
 
     query = incluirTodos ? query.in("rol", ["medico", "secretaria"]) : query.eq("rol", "medico");
+
+    // Secretaria asignada a un médico → solo ve a su médico
+    if (auth.rol === "secretaria") {
+      const { data: yo } = await supabase
+        .from("usuarios_clinica")
+        .select("asignado_a")
+        .eq("id", auth.id)
+        .single();
+      if (yo?.asignado_a) query = query.eq("id", yo.asignado_a);
+    }
 
     const { data, error } = await query;
 
@@ -125,6 +135,7 @@ export async function POST(request: NextRequest) {
         password_hash: passwordHash,   // columna correcta de usuarios_clinica
         rol: body.rol === "secretaria" ? "secretaria" : "medico",
         especialidad: body.rol === "secretaria" ? null : (especialidad || null),
+        asignado_a: body.rol === "secretaria" ? (body.asignado_a || null) : null,
         licencia_medica: licencia_medica || null,
         telefono: telefono || null,
         estado: true,

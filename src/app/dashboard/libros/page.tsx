@@ -64,7 +64,17 @@ export default function LibrosPage() {
           ["balance", "Balance General"],
           ["resultados", "Estado de Resultados"],
         ] as const).map(([key, label]) => (
-          <button key={key} className={`${styles.tab} ${libro === key ? styles.tabActive : ""}`} onClick={() => setLibro(key)}>
+          <button
+            key={key}
+            className={`${styles.tab} ${libro === key ? styles.tabActive : ""}`}
+            onClick={() => {
+              // Limpiar datos del libro anterior para no renderizar
+              // una forma de datos que no corresponde a la pestaña
+              setData(null);
+              setLoading(true);
+              setLibro(key);
+            }}
+          >
             {label}
           </button>
         ))}
@@ -74,6 +84,12 @@ export default function LibrosPage() {
         <p className={styles.vacio}>Generando libro...</p>
       ) : !data ? (
         <p className={styles.vacio}>Sin datos en el período.</p>
+      ) : (libro === "diario" || libro === "mayor") && !Array.isArray(data) ? (
+        <p className={styles.vacio}>Cargando...</p>
+      ) : libro === "balance" && !data.activos ? (
+        <p className={styles.vacio}>Cargando...</p>
+      ) : libro === "resultados" && !data.ingresos ? (
+        <p className={styles.vacio}>Cargando...</p>
       ) : libro === "diario" ? (
         // ================= LIBRO DIARIO =================
         <div className={styles.tableWrap}>

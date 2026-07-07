@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // pendientes por aseguradora.
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth, supabaseAdmin as supabase } from "@/lib/api-auth";
+import { verifyAuth, obtenerMedicoAsignado, supabaseAdmin as supabase } from "@/lib/api-auth";
 
 const esStaff = (rol: string) => rol === "admin" || rol === "secretaria";
 
@@ -19,7 +19,11 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const medicoIdParam = searchParams.get("medico_id");
-    const medicoId = esStaff(auth.rol) ? medicoIdParam : auth.id;
+    let medicoId = esStaff(auth.rol) ? medicoIdParam : auth.id;
+    if (auth.rol === "secretaria") {
+      const asignado = await obtenerMedicoAsignado(auth);
+      if (asignado) medicoId = asignado;
+    }
 
     const hoy = new Date();
     const hoyStr = hoy.toISOString().slice(0, 10);

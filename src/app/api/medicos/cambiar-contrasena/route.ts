@@ -1,114 +1,87 @@
 export const dynamic = "force-dynamic";
 
+// ============================================================
+// API CAMBIAR CONTRASEÑA (usuarios_clinica)
+// - Admin: puede cambiar la contraseña de cualquier usuario
+// - Médico: la suya propia o la de SU secretaria asignada
+// - Cualquier usuario: la suya (con contraseña actual)
+// ============================================================
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-function verifyAuth(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  try {
-    const token = authHeader.slice(7);
-    const verified = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; rol: string };
-    return verified;
-  } catch {
-    return null;
-  }
-}
+import { verifyAuth, supabaseAdmin as supabase } from "@/lib/api-auth";
+import { registrarAuditoria } from "@/lib/auditoria";
 
 export async function PUT(request: NextRequest) {
   try {
     const auth = verifyAuth(request);
-    if (!auth) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      );
-    }
+    if (!auth) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const body = await request.json();
     const { medico_id, contrasena_actual, contrasena_nueva } = body;
 
-    // Solo admin puede cambiar contraseña de otros, médico solo puede cambiar la suya
-    if (auth.rol !== "admin" && auth.userId !== medico_id) {
+    if (!medico_id || !contrasena_nueva) {
+      return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
+    }
+    if (String(contrasena_nueva).length < 6) {
+      return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+    }
+
+    const esPropia = auth.id === medico_id;
+    let autorizado = auth.rol === "admin" || esPropia;
+
+    // Médico puede cambiar la contraseña de su secretaria asignada
+    if (!autorizado && auth.rol === "medico") {
+      const { data: objetivo } = await supabase
+        .from("usuarios_clinica")
+        .select("rol, asignado_a")
+        .eq("id", medico_id)
+        .single();
+      autorizado = objetivo?.rol === "secretaria" && objetivo?.asignado_a === auth.id;
+    }
+
+    if (!autorizado) {
       return NextResponse.json(
         { error: "No tienes permiso para cambiar esta contraseña" },
         { status: 403 }
       );
     }
 
-    if (!medico_id || !contrasena_nueva) {
-      return NextResponse.json(
-        { error: "Faltan campos requeridos" },
-        { status: 400 }
-      );
-    }
-
-    // Si no es admin, verificar contraseña actual
-    if (auth.rol !== "admin") {
+    // Si cambia la suya propia (sin ser admin), verificar la actual
+    if (esPropia && auth.rol !== "admin") {
       if (!contrasena_actual) {
-        return NextResponse.json(
-          { error: "Debe proporcionar contraseña actual" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Debe proporcionar la contraseña actual" }, { status: 400 });
       }
-
-      const { data: medico } = await supabase
-        .from("medicos")
-        .select("contrasena")
+      const { data: usuario } = await supabase
+        .from("usuarios_clinica")
+        .select("password_hash")
         .eq("id", medico_id)
         .single();
-
-      if (!medico) {
-        return NextResponse.json(
-          { error: "Médico no encontrado" },
-          { status: 404 }
-        );
-      }
-
-      const esValida = await bcrypt.compare(contrasena_actual, medico.contrasena);
+      if (!usuario) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+      const esValida = await bcrypt.compare(contrasena_actual, usuario.password_hash);
       if (!esValida) {
-        return NextResponse.json(
-          { error: "Contraseña actual incorrecta" },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Contraseña actual incorrecta" }, { status: 401 });
       }
     }
 
-    // Hash de la nueva contraseña
-    const contrasenaHash = await bcrypt.hash(contrasena_nueva, 10);
-
+    const passwordHash = await bcrypt.hash(contrasena_nueva, 10);
     const { error } = await supabase
-      .from("medicos")
-      .update({ contrasena: contrasenaHash })
+      .from("usuarios_clinica")
+      .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
       .eq("id", medico_id);
 
-    if (error) {
-      console.error("Error actualizando contraseña:", error);
-      return NextResponse.json(
-        { error: "Error al cambiar contraseña" },
-        { status: 500 }
-      );
-    }
+    if (error) return NextResponse.json({ error: "Error al cambiar contraseña" }, { status: 500 });
 
-    return NextResponse.json(
-      { message: "Contraseña actualizada exitosamente" },
-      { status: 200 }
-    );
+    await registrarAuditoria(supabase, {
+      usuario_id: auth.id,
+      usuario_email: auth.email,
+      accion: "cambiar_contrasena",
+      entidad: "usuario",
+      entidad_id: medico_id,
+    });
+
+    return NextResponse.json({ message: "Contraseña actualizada exitosamente" });
   } catch (error) {
     console.error("Error:", error);
-    return NextResponse.json(
-      { error: "Error del servidor" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }

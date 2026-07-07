@@ -58,6 +58,7 @@ const medicoMenuItems: MenuItem[] = [
   { href: "/dashboard/crear-cita", label: "Agregar Consulta", icon: <Plus size={20} />, key: "crear-cita" },
   { href: "/dashboard/mis-pacientes", label: "Mis Pacientes", icon: <Users size={20} />, key: "mis-pacientes" },
   { href: "/dashboard/historial-nuevo", label: "Historial Clínico", icon: <ClipboardList size={20} />, key: "historial-nuevo" },
+  { href: "/dashboard/mi-secretaria", label: "Mi Secretaria", icon: <UserPlus size={20} />, key: "mi-secretaria" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

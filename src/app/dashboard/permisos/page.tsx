@@ -25,6 +25,7 @@ interface UsuarioRow {
   email: string;
   rol: string;
   especialidad: string;
+  asignado_a?: string;
   permisos: PermisosMap;
 }
 
@@ -65,6 +66,7 @@ export default function PermisosPage() {
           email: u.email,
           rol: u.rol || "medico",
           especialidad: u.especialidad || (u.rol === "secretaria" ? "secretaria" : "general"),
+          asignado_a: u.asignado_a || undefined,
           permisos: base,
         };
       });
@@ -147,7 +149,9 @@ export default function PermisosPage() {
                     </td>
                     <td>
                       <span className={styles.badge}>
-                        {f.rol === "secretaria" ? "🗂️ Secretaria" : esp ? `${esp.icono} ${esp.label}` : f.especialidad}
+                        {f.rol === "secretaria"
+                          ? `🗂️ Secretaria${f.asignado_a ? ` de ${filas.find((m) => m.id === f.asignado_a)?.nombre_completo || "—"}` : " (clínica)"}`
+                          : esp ? `${esp.icono} ${esp.label}` : f.especialidad}
                       </span>
                     </td>
                     <td>{activos} de {CAMPOS.length} módulos</td>

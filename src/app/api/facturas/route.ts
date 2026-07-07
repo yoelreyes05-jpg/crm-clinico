@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 //   - Trazabilidad: cita → factura → asiento → reclamación
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth, supabaseAdmin as supabase } from "@/lib/api-auth";
+import { verifyAuth, obtenerMedicoAsignado, supabaseAdmin as supabase } from "@/lib/api-auth";
 import { crearAsiento, cuentaPorMetodo, CUENTAS } from "@/lib/contabilidad";
 import { registrarAuditoria } from "@/lib/auditoria";
 
@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
     const hasta = searchParams.get("hasta");
     const medicoIdParam = searchParams.get("medico_id");
 
-    const medicoId = esStaff(auth.rol) ? medicoIdParam : auth.id;
+    let medicoId = esStaff(auth.rol) ? medicoIdParam : auth.id;
+    if (auth.rol === "secretaria") {
+      const asignado = await obtenerMedicoAsignado(auth);
+      if (asignado) medicoId = asignado;
+    }
 
     let query = supabase
       .from("facturas_clinica")
