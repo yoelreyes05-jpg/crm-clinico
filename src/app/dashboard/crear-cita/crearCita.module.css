@@ -242,6 +242,26 @@
   transform: translateY(-2px);
 }
 
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #2563eb;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.seguroInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #166534;
+}
+
 /* ===== Búsqueda de paciente por cédula ===== */
 .searchRow {
   display: flex;

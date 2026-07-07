@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Save, Search, UserPlus, CheckCircle2 } from "lucide-react";
+import { Plus, Save, Search, UserPlus, CheckCircle2, ShieldCheck } from "lucide-react";
 import styles from "./crearCita.module.css";
 
 interface Paciente {
@@ -31,6 +31,10 @@ export default function CrearCitaPage() {
   const [cedulaBusqueda, setCedulaBusqueda] = useState("");
   const [pacienteEncontrado, setPacienteEncontrado] = useState<Paciente | null>(null);
   const [busquedaSinResultado, setBusquedaSinResultado] = useState(false);
+
+  // Seguro del paciente (se llena automáticamente al encontrarlo)
+  const [seguroInfo, setSeguroInfo] = useState<{ ars: string; numero_afiliado: string } | null>(null);
+  const [consultandoSeguro, setConsultandoSeguro] = useState(false);
 
   const [formData, setFormData] = useState({
     paciente_id: "",
@@ -81,6 +85,34 @@ export default function CrearCitaPage() {
     }
   };
 
+  // Consultar el seguro del paciente y llenar los campos automáticamente
+  const consultarSeguro = async (pacienteId: string) => {
+    setConsultandoSeguro(true);
+    setSeguroInfo(null);
+    try {
+      const res = await fetch(`/api/seguros-pacientes?paciente_id=${pacienteId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const d = await res.json();
+        const seguro = (d.data || [])[0];
+        if (seguro) {
+          setSeguroInfo({
+            ars: seguro.aseguradora?.nombre || "ARS",
+            numero_afiliado: seguro.numero_afiliado || "",
+          });
+          setFormData((prev) => ({ ...prev, tipo_paciente: "asegurado" }));
+        } else {
+          setFormData((prev) => ({ ...prev, tipo_paciente: "privado" }));
+        }
+      }
+    } catch (e) {
+      console.error("Error consultando seguro:", e);
+    } finally {
+      setConsultandoSeguro(false);
+    }
+  };
+
   // Buscar paciente por cédula (con o sin guiones)
   const buscarPaciente = () => {
     const cedula = cedulaBusqueda.replace(/[\s-]/g, "");
@@ -95,9 +127,11 @@ export default function CrearCitaPage() {
       setPacienteEncontrado(encontrado);
       setBusquedaSinResultado(false);
       setFormData((prev) => ({ ...prev, paciente_id: encontrado.id }));
+      consultarSeguro(encontrado.id);
     } else {
       setPacienteEncontrado(null);
       setBusquedaSinResultado(true);
+      setSeguroInfo(null);
       setFormData((prev) => ({ ...prev, paciente_id: "" }));
     }
   };
@@ -106,7 +140,8 @@ export default function CrearCitaPage() {
     setCedulaBusqueda("");
     setPacienteEncontrado(null);
     setBusquedaSinResultado(false);
-    setFormData((prev) => ({ ...prev, paciente_id: "" }));
+    setSeguroInfo(null);
+    setFormData((prev) => ({ ...prev, paciente_id: "", tipo_paciente: "privado" }));
   };
 
   const irANuevoPaciente = () => {
@@ -166,10 +201,9 @@ export default function CrearCitaPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => router.back()}>
-          <ArrowLeft size={20} />
-        </button>
-        <h1>Agendar Nueva Cita</h1>
+        <h1 className={styles.headerTitle}>
+          <Plus size={26} strokeWidth={3} /> AGREGAR CONSULTA
+        </h1>
       </div>
 
       {loading ? (
@@ -227,6 +261,19 @@ export default function CrearCitaPage() {
                   <div>
                     <strong>{pacienteEncontrado.nombre_completo}</strong>
                     <span> — Cédula: {pacienteEncontrado.cedula}</span>
+                    <div className={styles.seguroInfo}>
+                      <ShieldCheck size={15} />
+                      {consultandoSeguro ? (
+                        <span>Consultando seguro...</span>
+                      ) : seguroInfo ? (
+                        <span>
+                          <b>Asegurado</b> — {seguroInfo.ars}
+                          {seguroInfo.numero_afiliado && ` · Afiliado: ${seguroInfo.numero_afiliado}`}
+                        </span>
+                      ) : (
+                        <span><b>Privado</b> — sin seguro registrado</span>
+                      )}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -254,6 +301,7 @@ export default function CrearCitaPage() {
                     if (sel) {
                       setPacienteEncontrado(sel);
                       setBusquedaSinResultado(false);
+                      consultarSeguro(sel.id);
                     }
                   }}
                   className={styles.selectField}

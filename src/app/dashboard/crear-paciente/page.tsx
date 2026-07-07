@@ -6,6 +6,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Save, AlertCircle, CheckCircle } from "lucide-react";
 import styles from "./crearPaciente.module.css";
 
+interface AseguradoraOption {
+  id: string;
+  nombre: string;
+}
+
 export default function CrearPacientePage() {
   const router = useRouter();
   const { usuario, token, loading: authLoading, isAuthenticated } = useAuth();
@@ -26,6 +31,15 @@ export default function CrearPacientePage() {
     tipo_sangre: "",
   });
 
+  // Seguro del paciente
+  const [aseguradoras, setAseguradoras] = useState<AseguradoraOption[]>([]);
+  const [esAsegurado, setEsAsegurado] = useState(false);
+  const [seguroData, setSeguroData] = useState({
+    aseguradora_id: "",
+    numero_afiliado: "",
+    plan: "",
+  });
+
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated || usuario?.rol !== "medico") {
@@ -42,6 +56,15 @@ export default function CrearPacientePage() {
     }
   }, []);
 
+  // Cargar catálogo de aseguradoras (ARS)
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/aseguradoras", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : { data: [] }))
+      .then((d) => setAseguradoras(d.data || []))
+      .catch(() => {});
+  }, [token]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -57,6 +80,11 @@ export default function CrearPacientePage() {
 
     if (!formData.cedula || !formData.nombre_completo || !formData.fecha_nacimiento) {
       setErrorMsg("Por favor completa los campos obligatorios: Cédula, Nombre y Fecha de Nacimiento.");
+      return;
+    }
+
+    if (esAsegurado && !seguroData.aseguradora_id) {
+      setErrorMsg("Selecciona la ARS del paciente asegurado.");
       return;
     }
 
@@ -80,6 +108,27 @@ export default function CrearPacientePage() {
       const result = await response.json();
 
       if (response.ok) {
+        // Si es asegurado, registrar su seguro automáticamente
+        if (esAsegurado && result.data?.id) {
+          try {
+            await fetch("/api/seguros-pacientes", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                paciente_id: result.data.id,
+                aseguradora_id: seguroData.aseguradora_id,
+                numero_afiliado: seguroData.numero_afiliado || formData.cedula,
+                plan: seguroData.plan || null,
+              }),
+            });
+          } catch (e) {
+            console.error("Error registrando seguro del paciente:", e);
+          }
+        }
+
         setSuccessMsg("¡Paciente creado exitosamente! Redirigiendo...");
         setFormData({
           cedula: "",
@@ -92,6 +141,8 @@ export default function CrearPacientePage() {
           ciudad: "",
           tipo_sangre: "",
         });
+        setEsAsegurado(false);
+        setSeguroData({ aseguradora_id: "", numero_afiliado: "", plan: "" });
         setTimeout(() => router.push("/dashboard/mis-pacientes"), 1500);
       } else {
         // Mostrar el error real del servidor
@@ -224,10 +275,6 @@ export default function CrearPacientePage() {
           </section>
 
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>📞</span>
-              Información de Contacto
-            </h2>
             <div className={styles.grid}>
               <div className={styles.fieldGroup}>
                 <label className={styles.label}>Teléfono</label>
@@ -277,6 +324,82 @@ export default function CrearPacientePage() {
                 />
               </div>
             </div>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}>🛡️</span>
+              Seguro Médico
+            </h2>
+
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>¿El paciente es asegurado?</label>
+              <div className={styles.seguroChecklist}>
+                <label className={styles.seguroCheckItem}>
+                  <input
+                    type="checkbox"
+                    checked={esAsegurado}
+                    onChange={() => setEsAsegurado(true)}
+                  />
+                  <span>Sí, asegurado (ARS)</span>
+                </label>
+                <label className={styles.seguroCheckItem}>
+                  <input
+                    type="checkbox"
+                    checked={!esAsegurado}
+                    onChange={() => {
+                      setEsAsegurado(false);
+                      setSeguroData({ aseguradora_id: "", numero_afiliado: "", plan: "" });
+                    }}
+                  />
+                  <span>No, privado</span>
+                </label>
+              </div>
+            </div>
+
+            {esAsegurado && (
+              <div className={styles.grid3}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label}>ARS *</label>
+                  <select
+                    className={styles.select}
+                    value={seguroData.aseguradora_id}
+                    onChange={(e) =>
+                      setSeguroData({ ...seguroData, aseguradora_id: e.target.value })
+                    }
+                  >
+                    <option value="">Seleccionar ARS</option>
+                    {aseguradoras.map((a) => (
+                      <option key={a.id} value={a.id}>{a.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label}>No. de Afiliado (NSS)</label>
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Si se deja vacío, se usa la cédula"
+                    value={seguroData.numero_afiliado}
+                    onChange={(e) =>
+                      setSeguroData({ ...seguroData, numero_afiliado: e.target.value })
+                    }
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label}>Plan</label>
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Básico, Complementario..."
+                    value={seguroData.plan}
+                    onChange={(e) =>
+                      setSeguroData({ ...seguroData, plan: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
           <div className={styles.formButtons}>
