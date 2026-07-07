@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("citas")
       .select(`
-        id, especialidad, fecha_cita, duracion_minutos,
+        id, especialidad, fecha_cita, duracion_minutos, tipo_paciente,
         motivo_cita, estado, notas, visto_paciente, created_at,
         pacientes (id, nombre_completo, cedula),
         usuarios_clinica (id, nombre_completo, especialidad)
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { paciente_id, medico_id, especialidad, fecha_cita, duracion_minutos, motivo_cita, notas } = body;
+    const { paciente_id, medico_id, especialidad, fecha_cita, duracion_minutos, motivo_cita, notas, tipo_paciente } = body;
 
     if (!paciente_id || !fecha_cita) {
       return NextResponse.json({ error: "Paciente y fecha son requeridos" }, { status: 400 });
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
         especialidad: especialidad || auth.especialidad || "General",
         fecha_cita,
         duracion_minutos: duracion_minutos || 30,
+        tipo_paciente: tipo_paciente === "asegurado" ? "asegurado" : "privado",
         motivo_cita: motivo_cita || null,
         notas: notas || null,
         estado: "programada",

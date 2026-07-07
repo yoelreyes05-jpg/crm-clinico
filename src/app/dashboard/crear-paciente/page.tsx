@@ -33,6 +33,15 @@ export default function CrearPacientePage() {
     }
   }, [isAuthenticated, usuario, authLoading, router]);
 
+  // Prellenar cédula si viene desde la búsqueda de Agendar Cita (?cedula=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cedula = params.get("cedula");
+    if (cedula) {
+      setFormData((prev) => ({ ...prev, cedula }));
+    }
+  }, []);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {

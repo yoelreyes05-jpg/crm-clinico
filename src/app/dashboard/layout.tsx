@@ -11,7 +11,6 @@ import {
   LogOut,
   Home,
   Plus,
-  UserPlus,
   ClipboardList,
   Activity,
   ChevronLeft,
@@ -48,7 +47,6 @@ const medicoMenuItems: MenuItem[] = [
   { href: "/dashboard/mis-citas", label: "Mis Citas", icon: <Calendar size={20} />, key: "mis-citas" },
   { href: "/dashboard/crear-cita", label: "Agendar Cita", icon: <Plus size={20} />, key: "crear-cita" },
   { href: "/dashboard/mis-pacientes", label: "Mis Pacientes", icon: <Users size={20} />, key: "mis-pacientes" },
-  { href: "/dashboard/crear-paciente", label: "Nuevo Paciente", icon: <UserPlus size={20} />, key: "crear-paciente" },
   { href: "/dashboard/historial-nuevo", label: "Historial Clínico", icon: <ClipboardList size={20} />, key: "historial-nuevo" },
 ];
 
