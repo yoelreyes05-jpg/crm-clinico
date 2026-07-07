@@ -52,7 +52,14 @@ export default function CrearPacientePage() {
     const params = new URLSearchParams(window.location.search);
     const cedula = params.get("cedula");
     if (cedula) {
-      setFormData((prev) => ({ ...prev, cedula }));
+      const digitos = cedula.replace(/\D/g, "").slice(0, 11);
+      const formateada =
+        digitos.length > 10
+          ? `${digitos.slice(0, 3)}-${digitos.slice(3, 10)}-${digitos.slice(10)}`
+          : digitos.length > 3
+          ? `${digitos.slice(0, 3)}-${digitos.slice(3)}`
+          : digitos;
+      setFormData((prev) => ({ ...prev, cedula: formateada }));
     }
   }, []);
 
@@ -73,19 +80,61 @@ export default function CrearPacientePage() {
     if (errorMsg) setErrorMsg(null);
   };
 
+  // Formatear cédula dominicana con guiones automáticos: 001-1234567-8
+  const formatearCedula = (valor: string) => {
+    const digitos = valor.replace(/\D/g, "").slice(0, 11);
+    if (digitos.length <= 3) return digitos;
+    if (digitos.length <= 10) return `${digitos.slice(0, 3)}-${digitos.slice(3)}`;
+    return `${digitos.slice(0, 3)}-${digitos.slice(3, 10)}-${digitos.slice(10)}`;
+  };
+
+  const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, cedula: formatearCedula(e.target.value) });
+    if (errorMsg) setErrorMsg(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!formData.cedula || !formData.nombre_completo || !formData.fecha_nacimiento) {
-      setErrorMsg("Por favor completa los campos obligatorios: Cédula, Nombre y Fecha de Nacimiento.");
+    // Todos los campos del paciente son obligatorios
+    const camposRequeridos: { valor: string; nombre: string }[] = [
+      { valor: formData.cedula, nombre: "Cédula" },
+      { valor: formData.nombre_completo, nombre: "Nombre Completo" },
+      { valor: formData.fecha_nacimiento, nombre: "Fecha de Nacimiento" },
+      { valor: formData.sexo, nombre: "Sexo" },
+      { valor: formData.tipo_sangre, nombre: "Tipo de Sangre" },
+      { valor: formData.telefono, nombre: "Teléfono" },
+      { valor: formData.email, nombre: "Email" },
+      { valor: formData.direccion, nombre: "Dirección" },
+      { valor: formData.ciudad, nombre: "Ciudad" },
+    ];
+
+    const faltantes = camposRequeridos.filter((c) => !c.valor.trim()).map((c) => c.nombre);
+    if (faltantes.length > 0) {
+      setErrorMsg(`Todos los campos son obligatorios. Falta: ${faltantes.join(", ")}.`);
       return;
     }
 
-    if (esAsegurado && !seguroData.aseguradora_id) {
-      setErrorMsg("Selecciona la ARS del paciente asegurado.");
+    if (formData.cedula.replace(/\D/g, "").length !== 11) {
+      setErrorMsg("La cédula debe tener 11 dígitos (formato 001-1234567-8).");
       return;
+    }
+
+    if (esAsegurado) {
+      if (!seguroData.aseguradora_id) {
+        setErrorMsg("Selecciona el tipo de ARS del paciente asegurado.");
+        return;
+      }
+      if (!seguroData.numero_afiliado.trim()) {
+        setErrorMsg("Ingresa el No. de Afiliado (NSS) del paciente asegurado.");
+        return;
+      }
+      if (!seguroData.plan.trim()) {
+        setErrorMsg("Ingresa el plan del seguro del paciente asegurado.");
+        return;
+      }
     }
 
     if (!token) {
@@ -120,7 +169,7 @@ export default function CrearPacientePage() {
               body: JSON.stringify({
                 paciente_id: result.data.id,
                 aseguradora_id: seguroData.aseguradora_id,
-                numero_afiliado: seguroData.numero_afiliado || formData.cedula,
+                numero_afiliado: seguroData.numero_afiliado,
                 plan: seguroData.plan || null,
               }),
             });
@@ -206,7 +255,9 @@ export default function CrearPacientePage() {
                   name="cedula"
                   placeholder="Ej: 001-2345678-9"
                   value={formData.cedula}
-                  onChange={handleChange}
+                  onChange={handleCedulaChange}
+                  maxLength={13}
+                  inputMode="numeric"
                   required
                 />
               </div>
@@ -237,24 +288,26 @@ export default function CrearPacientePage() {
                 />
               </div>
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>Sexo</label>
+                <label className={styles.label}>Sexo *</label>
                 <select
                   className={styles.select}
                   name="sexo"
                   value={formData.sexo}
                   onChange={handleChange}
+                  required
                 >
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                 </select>
               </div>
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>Tipo de Sangre</label>
+                <label className={styles.label}>Tipo de Sangre *</label>
                 <select
                   className={styles.select}
                   name="tipo_sangre"
                   value={formData.tipo_sangre}
                   onChange={handleChange}
+                  required
                 >
                   <option value="">Seleccionar</option>
                   <option value="O+">O+</option>
@@ -299,6 +352,7 @@ export default function CrearPacientePage() {
                       onChange={(e) =>
                         setSeguroData({ ...seguroData, aseguradora_id: e.target.value })
                       }
+                      required
                     >
                       <option value="">Seleccionar ARS</option>
                       {aseguradoras.map((a) => (
@@ -307,15 +361,16 @@ export default function CrearPacientePage() {
                     </select>
                   </div>
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>No. de Afiliado (NSS)</label>
+                    <label className={styles.label}>No. de Afiliado (NSS) *</label>
                     <input
                       className={styles.input}
                       type="text"
-                      placeholder="Si se deja vacío, se usa la cédula"
+                      placeholder="Ej: 123456789"
                       value={seguroData.numero_afiliado}
                       onChange={(e) =>
                         setSeguroData({ ...seguroData, numero_afiliado: e.target.value })
                       }
+                      required
                     />
                   </div>
                 </>
@@ -325,7 +380,7 @@ export default function CrearPacientePage() {
             {esAsegurado && (
               <div className={styles.grid3}>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.label}>Plan</label>
+                  <label className={styles.label}>Plan *</label>
                   <input
                     className={styles.input}
                     type="text"
@@ -334,6 +389,7 @@ export default function CrearPacientePage() {
                     onChange={(e) =>
                       setSeguroData({ ...seguroData, plan: e.target.value })
                     }
+                    required
                   />
                 </div>
               </div>
@@ -343,7 +399,7 @@ export default function CrearPacientePage() {
           <section className={styles.section}>
             <div className={styles.grid}>
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>Teléfono</label>
+                <label className={styles.label}>Teléfono *</label>
                 <input
                   className={styles.input}
                   type="tel"
@@ -351,10 +407,11 @@ export default function CrearPacientePage() {
                   placeholder="Número telefónico"
                   value={formData.telefono}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>Email</label>
+                <label className={styles.label}>Email *</label>
                 <input
                   className={styles.input}
                   type="email"
@@ -362,13 +419,14 @@ export default function CrearPacientePage() {
                   placeholder="correo@ejemplo.com"
                   value={formData.email}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
 
             <div className={styles.grid}>
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>Dirección</label>
+                <label className={styles.label}>Dirección *</label>
                 <input
                   className={styles.input}
                   type="text"
@@ -376,10 +434,11 @@ export default function CrearPacientePage() {
                   placeholder="Dirección residencial"
                   value={formData.direccion}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>Ciudad</label>
+                <label className={styles.label}>Ciudad *</label>
                 <input
                   className={styles.input}
                   type="text"
@@ -387,6 +446,7 @@ export default function CrearPacientePage() {
                   placeholder="Ciudad"
                   value={formData.ciudad}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>

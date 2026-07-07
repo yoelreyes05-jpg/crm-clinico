@@ -149,6 +149,14 @@ export default function CrearCitaPage() {
     router.push(`/dashboard/crear-paciente${cedula ? `?cedula=${cedula}` : ""}`);
   };
 
+  // Formatear cédula dominicana con guiones automáticos: 001-1234567-8
+  const formatearCedula = (valor: string) => {
+    const digitos = valor.replace(/\D/g, "").slice(0, 11);
+    if (digitos.length <= 3) return digitos;
+    if (digitos.length <= 10) return `${digitos.slice(0, 3)}-${digitos.slice(3)}`;
+    return `${digitos.slice(0, 3)}-${digitos.slice(3, 10)}-${digitos.slice(10)}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -220,8 +228,10 @@ export default function CrearCitaPage() {
                   type="text"
                   placeholder="Buscar por cédula (Ej: 001-1234567-8)"
                   value={cedulaBusqueda}
+                  maxLength={13}
+                  inputMode="numeric"
                   onChange={(e) => {
-                    setCedulaBusqueda(e.target.value);
+                    setCedulaBusqueda(formatearCedula(e.target.value));
                     setBusquedaSinResultado(false);
                   }}
                   onKeyDown={(e) => {
