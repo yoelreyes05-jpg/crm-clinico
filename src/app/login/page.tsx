@@ -49,7 +49,7 @@ export default function LoginPage() {
           <div className={styles.logo}>
             <span className={styles.logoIcon}>🏥</span>
           </div>
-          <h1>CRM Clínico</h1>
+          <h1>MEDIKIT</h1>
           <p className={styles.subtitle}>
             Sistema de Gestión Médica Multi-especialidad
           </p>

@@ -113,8 +113,8 @@ export default function MiDashboardPage() {
         <>
           {/* Tarjeta de Bienvenida */}
           <div className={styles.welcomeCard}>
-            <h2>Bienvenido, {usuario?.nombre_completo}! 👋</h2>
-            <p>Especialidad: {usuario?.especialidad || "No especificada"}</p>
+            <h2>BIENVENIDO, {usuario?.nombre_completo?.toUpperCase()}! 👋</h2>
+            <p>Especialidad: {usuario?.especialidad?.toUpperCase() || "No especificada"}</p>
           </div>
 
           {/* Estadísticas */}

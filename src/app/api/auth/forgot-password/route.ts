@@ -37,12 +37,12 @@ async function enviarEmailRecuperacion(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM || "CRM Clínico <noreply@tudominio.com>",
+      from: process.env.EMAIL_FROM || "MEDIKIT <noreply@tudominio.com>",
       to: [email],
-      subject: "Recuperación de Contraseña — CRM Clínico",
+      subject: "Recuperación de Contraseña — MEDIKIT",
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px">
-          <h2 style="color:#0284c7;margin-bottom:8px">🏥 CRM Clínico</h2>
+          <h2 style="color:#0284c7;margin-bottom:8px">🏥 MEDIKIT</h2>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin-bottom:20px">
           <p>Hola <strong>${nombre}</strong>,</p>
           <p>Recibimos una solicitud para restablecer tu contraseña. Si no la realizaste, ignora este correo.</p>

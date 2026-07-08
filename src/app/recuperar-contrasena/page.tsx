@@ -115,7 +115,7 @@ function RecuperarContraseniaContent() {
       <div className={styles.formCard}>
         <div className={styles.logo}>
           <div className={styles.logoIcon}>🏥</div>
-          <h1 className={styles.logoTitle}>CRM Clínico</h1>
+          <h1 className={styles.logoTitle}>MEDIKIT</h1>
         </div>
 
         {step === "email" && (

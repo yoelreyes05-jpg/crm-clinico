@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CRM Clínico - Sistema de Gestión Médica",
+  title: "MEDIKIT - Sistema de Gestión Médica",
   description: "Sistema integral de gestión clínica multi-especialidad",
   icons: {
     icon: "/favicon.ico",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CRM Clínico",
+    title: "MEDIKIT",
   },
 };
 

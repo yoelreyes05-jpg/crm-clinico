@@ -141,8 +141,8 @@ export default function DashboardPage() {
               : "Mi Área de Trabajo"}
           </h1>
           <p className={styles.textMuted}>
-            Bienvenido, {usuario.nombre_completo}
-            {usuario.especialidad && ` • ${usuario.especialidad}`}
+            BIENVENIDO, {usuario.nombre_completo?.toUpperCase()}
+            {usuario.especialidad && ` • ${usuario.especialidad.toUpperCase()}`}
           </p>
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
         <div className={styles.infoGrid}>
           <div className={styles.infoCard}>
             <span className={styles.infoLabel}>Sistema</span>
-            <span className={styles.infoValue}>CRM Clínico v1.0.0</span>
+            <span className={styles.infoValue}>MEDIKIT v1.0.0</span>
           </div>
           <div className={styles.infoCard}>
             <span className={styles.infoLabel}>Rol</span>

@@ -528,7 +528,7 @@ export default function PacientePortal() {
         <span className={styles.headerIcon}>🏥</span>
         <div className={styles.headerText}>
           <h1>Mi Historial Clínico</h1>
-          <p>Portal de Pacientes — CRM Clínico</p>
+          <p>Portal de Pacientes — MEDIKIT</p>
         </div>
         {installPrompt && !instalado && (
           <button className={styles.btnInstalar} onClick={handleInstall} title="Instalar app en tu dispositivo">

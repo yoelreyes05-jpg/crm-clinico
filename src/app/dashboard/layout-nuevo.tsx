@@ -76,8 +76,8 @@ export default function DashboardLayout({
           <div className={styles.logo}>
             <div className={styles.logoIcon}>🏥</div>
             <div className={styles.logoText}>
-              <h2>CRM</h2>
-              <p>Clínico</p>
+              <h2>MEDIKIT</h2>
+              <p>Sistema de Gestión Médica</p>
             </div>
           </div>
 

@@ -180,7 +180,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           {!collapsed && (
             <div className={styles.logoText}>
-              <span className={styles.logoTitle}>MediCRM</span>
+              <span className={styles.logoTitle}>MEDIKIT</span>
               <span className={styles.logoSub}>Sistema Clínico</span>
             </div>
           )}
@@ -261,7 +261,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <header className={styles.topBar}>
           <div className={styles.topBarLeft}>
             <div className={styles.breadcrumb}>
-              <span className={styles.breadHome}>CRM Clínico</span>
+              <span className={styles.breadHome}>MEDIKIT</span>
               <span className={styles.breadSep}>/</span>
               <span className={styles.breadCurrent}>{currentPage}</span>
             </div>
