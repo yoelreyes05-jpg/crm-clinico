@@ -3,9 +3,9 @@ export const dynamic = "force-dynamic";
 // ============================================================
 // API SECRETARIAS [id]
 // PUT: actualizar datos / contraseña / activar-desactivar
-//   - Médico: solo SU secretaria (nombre, teléfono, contraseña, estado)
+//   - Médico: solo SU secretaria (nombre, email, teléfono, contraseña, estado)
 //   - Admin: todo, incluida la reasignación a otro médico
-// DELETE: desactivar (médico la suya; admin cualquiera)
+// DELETE: eliminar definitivamente (médico la suya; admin cualquiera)
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
@@ -43,6 +43,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     // Campos que puede tocar el médico dueño
     if (body.nombre_completo !== undefined) updates.nombre_completo = body.nombre_completo;
+    if (body.email !== undefined) updates.email = body.email;
     if (body.telefono !== undefined) updates.telefono = body.telefono;
     if (body.estado !== undefined) updates.estado = body.estado;
 
@@ -54,10 +55,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       updates.password_hash = await bcrypt.hash(body.password, 10);
     }
 
-    // Solo el ADMIN puede cambiar email o reasignar a otro médico
-    if (auth.rol === "admin") {
-      if (body.email !== undefined) updates.email = body.email;
-      if (body.asignado_a !== undefined) updates.asignado_a = body.asignado_a || null;
+    // Solo el ADMIN puede reasignar a otro médico
+    if (auth.rol === "admin" && body.asignado_a !== undefined) {
+      updates.asignado_a = body.asignado_a || null;
     }
 
     const { data, error } = await supabase
@@ -95,22 +95,34 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Solo puedes gestionar tu propia secretaria" }, { status: 403 });
     }
 
+    // Borrar sus permisos y luego el usuario
+    await supabase.from("permisos_especialidades").delete().eq("medico_id", params.id);
+
     const { error } = await supabase
       .from("usuarios_clinica")
-      .update({ estado: false, updated_at: new Date().toISOString() })
+      .delete()
       .eq("id", params.id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      // Si hay registros vinculados (FK), desactivar en su lugar
+      await supabase
+        .from("usuarios_clinica")
+        .update({ estado: false, updated_at: new Date().toISOString() })
+        .eq("id", params.id);
+      return NextResponse.json({
+        message: "La secretaria tiene registros vinculados; fue desactivada en su lugar",
+      });
+    }
 
     await registrarAuditoria(supabase, {
       usuario_id: auth.id,
       usuario_email: auth.email,
-      accion: "desactivar",
+      accion: "eliminar",
       entidad: "secretaria",
       entidad_id: params.id,
     });
 
-    return NextResponse.json({ message: "Secretaria desactivada" });
+    return NextResponse.json({ message: "Secretaria eliminada" });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Error del servidor" }, { status: 500 });
   }

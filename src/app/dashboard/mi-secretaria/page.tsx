@@ -11,7 +11,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { UserPlus, KeyRound, Info, X } from "lucide-react";
+import { UserPlus, KeyRound, Info, X, Pencil, Trash2 } from "lucide-react";
 import styles from "../his.module.css";
 
 interface Secretaria {
@@ -41,6 +41,8 @@ export default function MiSecretariaPage() {
   const [showForm, setShowForm] = useState(false);
   const [showPassModal, setShowPassModal] = useState<Secretaria | null>(null);
   const [nuevaPass, setNuevaPass] = useState("");
+  const [showEditModal, setShowEditModal] = useState<Secretaria | null>(null);
+  const [formEdit, setFormEdit] = useState({ nombre_completo: "", email: "", telefono: "" });
 
   const [form, setForm] = useState({
     nombre_completo: "",
@@ -145,6 +147,52 @@ export default function MiSecretariaPage() {
     else alert(`Error: ${(await res.json()).error}`);
   };
 
+  const abrirEditar = (sec: Secretaria) => {
+    setFormEdit({
+      nombre_completo: sec.nombre_completo,
+      email: sec.email,
+      telefono: sec.telefono || "",
+    });
+    setShowEditModal(sec);
+  };
+
+  const editarSecretaria = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showEditModal) return;
+    setGuardando(true);
+    try {
+      const res = await fetch(`/api/secretarias/${showEditModal.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(formEdit),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setShowEditModal(null);
+        cargar();
+      } else {
+        alert(`Error: ${d.error}`);
+      }
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const eliminarSecretaria = async (sec: Secretaria) => {
+    if (!confirm(`¿Eliminar a ${sec.nombre_completo}? Esta acción no se puede deshacer.`)) return;
+    const res = await fetch(`/api/secretarias/${sec.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const d = await res.json();
+    if (res.ok) {
+      if (d.message) alert(d.message);
+      cargar();
+    } else {
+      alert(`Error: ${d.error}`);
+    }
+  };
+
   const cambiarPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showPassModal) return;
@@ -232,6 +280,9 @@ export default function MiSecretariaPage() {
                     </div>
                   </td>
                   <td className={styles.acciones}>
+                    <button className={`${styles.btnMini} ${styles.btnMiniAzul}`} onClick={() => abrirEditar(s)}>
+                      <Pencil size={12} /> Editar
+                    </button>
                     <button className={`${styles.btnMini} ${styles.btnMiniAzul}`} onClick={() => setShowPassModal(s)}>
                       <KeyRound size={12} /> Contraseña
                     </button>
@@ -240,6 +291,9 @@ export default function MiSecretariaPage() {
                       onClick={() => toggleEstado(s)}
                     >
                       {s.estado ? "Desactivar" : "Activar"}
+                    </button>
+                    <button className={`${styles.btnMini} ${styles.btnMiniRojo}`} onClick={() => eliminarSecretaria(s)}>
+                      <Trash2 size={12} /> Eliminar
                     </button>
                   </td>
                 </tr>
@@ -284,6 +338,43 @@ export default function MiSecretariaPage() {
                 <button type="button" className={styles.btnGhost} onClick={() => setShowForm(false)}>Cancelar</button>
                 <button type="submit" className={styles.btnPrimary} disabled={guardando}>
                   {guardando ? "Creando..." : "Crear secretaria"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Modal editar secretaria ===== */}
+      {showEditModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowEditModal(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <span className={styles.modalTitle}><Pencil size={16} /> Editar secretaria</span>
+              <button className={styles.iconBtn} onClick={() => setShowEditModal(null)}><X size={18} /></button>
+            </div>
+            <form onSubmit={editarSecretaria}>
+              <div className={styles.formGrid}>
+                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                  <label className={styles.label}>Nombre completo *</label>
+                  <input className={styles.input} type="text" required value={formEdit.nombre_completo}
+                    onChange={(e) => setFormEdit({ ...formEdit, nombre_completo: e.target.value })} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Email (para iniciar sesión) *</label>
+                  <input className={styles.input} type="email" required value={formEdit.email}
+                    onChange={(e) => setFormEdit({ ...formEdit, email: e.target.value })} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Teléfono</label>
+                  <input className={styles.input} type="tel" value={formEdit.telefono}
+                    onChange={(e) => setFormEdit({ ...formEdit, telefono: e.target.value })} />
+                </div>
+              </div>
+              <div className={styles.formActions}>
+                <button type="button" className={styles.btnGhost} onClick={() => setShowEditModal(null)}>Cancelar</button>
+                <button type="submit" className={styles.btnPrimary} disabled={guardando}>
+                  {guardando ? "Guardando..." : "Guardar cambios"}
                 </button>
               </div>
             </form>
