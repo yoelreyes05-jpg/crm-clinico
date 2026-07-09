@@ -288,7 +288,7 @@ export default function MedicosPage() {
                   .filter((m) => (m.rol || "medico") === "medico")
                   .map((m) => (
                     <option key={m.id} value={m.id}>
-                      Asignada a: {m.nombre_completo}
+                      Asignada a: {m.nombre_completo?.toUpperCase()}
                     </option>
                   ))}
               </select>
@@ -452,11 +452,11 @@ export default function MedicosPage() {
               <tbody>
                 {medicos.map((medico) => (
                   <tr key={medico.id}>
-                    <td>{medico.nombre_completo}</td>
+                    <td>{medico.nombre_completo?.toUpperCase()}</td>
                     <td>{medico.email}</td>
                     <td>
                       {medico.rol === "secretaria"
-                        ? `🗂️ Secretaria${medico.asignado_a ? ` de ${medicos.find((m) => m.id === medico.asignado_a)?.nombre_completo || "—"}` : " (clínica)"}`
+                        ? `🗂️ Secretaria${medico.asignado_a ? ` de ${medicos.find((m) => m.id === medico.asignado_a)?.nombre_completo?.toUpperCase() || "—"}` : " (clínica)"}`
                         : medico.especialidad}
                     </td>
                     <td>{medico.licencia_medica || "-"}</td>

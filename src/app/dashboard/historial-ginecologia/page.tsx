@@ -539,7 +539,7 @@ export default function HistorialGinecologiaPage() {
     <div class="header">
       <div class="clinic">
         <h1>🏥 Historia Clínica Perinatal</h1>
-        <p>Dr./Dra. ${usuario?.nombre_completo || ""} &nbsp;·&nbsp; Ginecología / Obstetricia &nbsp;·&nbsp; Estándar CLAP/SMR (OPS-OMS)</p>
+        <p>Dr./Dra. ${usuario?.nombre_completo?.toUpperCase() || ""} &nbsp;·&nbsp; Ginecología / Obstetricia &nbsp;·&nbsp; Estándar CLAP/SMR (OPS-OMS)</p>
         <p>Fecha: ${new Date().toLocaleDateString("es-ES", { day:"2-digit", month:"long", year:"numeric" })}</p>
       </div>
       <div class="badge">OBSTETRICIA<br>PRENATAL</div>

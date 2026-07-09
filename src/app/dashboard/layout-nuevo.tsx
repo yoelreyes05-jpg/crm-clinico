@@ -99,7 +99,7 @@ export default function DashboardLayout({
           <div className={styles.userCard}>
             <div className={styles.userAvatar}>{initials}</div>
             <div className={styles.userInfo}>
-              <p className={styles.userName}>{usuario.nombre_completo}</p>
+              <p className={styles.userName}>{usuario.nombre_completo?.toUpperCase()}</p>
               <p className={styles.userRole}>
                 {usuario.rol === "admin" ? "Administrador" : "Médico"}
               </p>

@@ -132,7 +132,7 @@ export default function ReportesPage() {
             <h3>Información de la Consulta</h3>
             <div class="info-row">
               <span class="info-label">Médico:</span>
-              <span>${medico?.nombre_completo || "N/A"}</span>
+              <span>${medico?.nombre_completo?.toUpperCase() || "N/A"}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Especialidad:</span>

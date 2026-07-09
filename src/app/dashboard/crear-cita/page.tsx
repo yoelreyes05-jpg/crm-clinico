@@ -464,7 +464,7 @@ export default function CrearCitaPage() {
                     <option value="">Seleccionar médico</option>
                     {medicos.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.nombre_completo}
+                        {m.nombre_completo?.toUpperCase()}
                       </option>
                     ))}
                   </select>

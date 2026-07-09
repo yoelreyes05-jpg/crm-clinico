@@ -187,7 +187,7 @@ export default function ContabilidadPage() {
             <select className={styles.select} value={filtroMedico} onChange={(e) => setFiltroMedico(e.target.value)}>
               <option value="">Todos los médicos</option>
               {medicos.map((m) => (
-                <option key={m.id} value={m.id}>{m.nombre_completo}</option>
+                <option key={m.id} value={m.id}>{m.nombre_completo?.toUpperCase()}</option>
               ))}
             </select>
           )}

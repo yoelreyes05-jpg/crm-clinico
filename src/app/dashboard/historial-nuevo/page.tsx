@@ -221,7 +221,7 @@ export default function HistorialNuevoPage() {
               </div>
             </div>
             <div class="doctor-info">
-              <p><strong>Médico:</strong> ${usuario?.nombre_completo}</p>
+              <p><strong>Médico:</strong> ${usuario?.nombre_completo?.toUpperCase()}</p>
               <p><strong>Licencia:</strong> ${usuario?.licencia_medica || "N/A"}</p>
             </div>
           </div>

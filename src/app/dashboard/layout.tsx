@@ -35,30 +35,31 @@ interface MenuItem {
   label: string;
   icon: React.ReactNode;
   key: string;
+  section: string;
 }
 
 const adminMenuItems: MenuItem[] = [
-  { href: "/dashboard", label: "Inicio", icon: <Home size={20} />, key: "inicio" },
-  { href: "/dashboard/medicos", label: "Personal", icon: <Stethoscope size={20} />, key: "medicos" },
-  { href: "/dashboard/pacientes", label: "Pacientes", icon: <Users size={20} />, key: "pacientes" },
-  { href: "/dashboard/citas", label: "Citas", icon: <Calendar size={20} />, key: "citas" },
-  { href: "/dashboard/ars", label: "ARS", icon: <Landmark size={20} />, key: "ars" },
-  { href: "/dashboard/facturacion", label: "Facturación", icon: <Receipt size={20} />, key: "facturacion" },
-  { href: "/dashboard/cxc", label: "Cuentas por Cobrar", icon: <Landmark size={20} />, key: "cxc" },
-  { href: "/dashboard/contabilidad", label: "Contabilidad", icon: <Wallet size={20} />, key: "contabilidad" },
-  { href: "/dashboard/libros", label: "Libros Contables", icon: <BookOpen size={20} />, key: "libros" },
-  { href: "/dashboard/finanzas", label: "Finanzas", icon: <PieChart size={20} />, key: "finanzas" },
-  { href: "/dashboard/permisos", label: "Permisos", icon: <KeyRound size={20} />, key: "permisos" },
-  { href: "/dashboard/reportes", label: "Reportes", icon: <FileText size={20} />, key: "reportes" },
+  { href: "/dashboard", label: "Inicio", icon: <Home size={20} />, key: "inicio", section: "Principal" },
+  { href: "/dashboard/medicos", label: "Personal", icon: <Stethoscope size={20} />, key: "medicos", section: "Gestión" },
+  { href: "/dashboard/pacientes", label: "Pacientes", icon: <Users size={20} />, key: "pacientes", section: "Gestión" },
+  { href: "/dashboard/citas", label: "Citas", icon: <Calendar size={20} />, key: "citas", section: "Gestión" },
+  { href: "/dashboard/ars", label: "ARS", icon: <Landmark size={20} />, key: "ars", section: "Finanzas" },
+  { href: "/dashboard/facturacion", label: "Facturación", icon: <Receipt size={20} />, key: "facturacion", section: "Finanzas" },
+  { href: "/dashboard/cxc", label: "Cuentas por Cobrar", icon: <Landmark size={20} />, key: "cxc", section: "Finanzas" },
+  { href: "/dashboard/contabilidad", label: "Contabilidad", icon: <Wallet size={20} />, key: "contabilidad", section: "Finanzas" },
+  { href: "/dashboard/libros", label: "Libros Contables", icon: <BookOpen size={20} />, key: "libros", section: "Finanzas" },
+  { href: "/dashboard/finanzas", label: "Finanzas", icon: <PieChart size={20} />, key: "finanzas", section: "Finanzas" },
+  { href: "/dashboard/permisos", label: "Permisos", icon: <KeyRound size={20} />, key: "permisos", section: "Sistema" },
+  { href: "/dashboard/reportes", label: "Reportes", icon: <FileText size={20} />, key: "reportes", section: "Sistema" },
 ];
 
 const medicoMenuItems: MenuItem[] = [
-  { href: "/dashboard/mi-dashboard", label: "Dashboard", icon: <BarChart3 size={20} />, key: "mi-dashboard" },
-  { href: "/dashboard/mis-citas", label: "CITAS", icon: <Calendar size={20} />, key: "mis-citas" },
-  { href: "/dashboard/crear-cita", label: "Agregar Consulta", icon: <Plus size={20} />, key: "crear-cita" },
-  { href: "/dashboard/mis-pacientes", label: "Mis Pacientes", icon: <Users size={20} />, key: "mis-pacientes" },
-  { href: "/dashboard/historial-nuevo", label: "Historial Clínico", icon: <ClipboardList size={20} />, key: "historial-nuevo" },
-  { href: "/dashboard/mi-secretaria", label: "Mi Secretaria", icon: <UserPlus size={20} />, key: "mi-secretaria" },
+  { href: "/dashboard/mi-dashboard", label: "Dashboard", icon: <BarChart3 size={20} />, key: "mi-dashboard", section: "Principal" },
+  { href: "/dashboard/mis-citas", label: "CITAS", icon: <Calendar size={20} />, key: "mis-citas", section: "Consultas" },
+  { href: "/dashboard/crear-cita", label: "Agregar Consulta", icon: <Plus size={20} />, key: "crear-cita", section: "Consultas" },
+  { href: "/dashboard/mis-pacientes", label: "Mis Pacientes", icon: <Users size={20} />, key: "mis-pacientes", section: "Consultas" },
+  { href: "/dashboard/historial-nuevo", label: "Historial Clínico", icon: <ClipboardList size={20} />, key: "historial-nuevo", section: "Consultas" },
+  { href: "/dashboard/mi-secretaria", label: "Mi Secretaria", icon: <UserPlus size={20} />, key: "mi-secretaria", section: "Mi Equipo" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -94,25 +95,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       label: "Ficha Ginecológica",
       icon: <Heart size={20} />,
       key: "historial-ginecologia",
+      section: "Consultas",
     });
   }
   if (usuario.rol === "medico" && permisos.acceso_facturacion) {
-    especialidadItems.push({ href: "/dashboard/facturacion", label: "Facturación", icon: <Receipt size={20} />, key: "facturacion" });
+    especialidadItems.push({ href: "/dashboard/facturacion", label: "Facturación", icon: <Receipt size={20} />, key: "facturacion", section: "Finanzas" });
   }
   if (usuario.rol === "medico" && permisos.acceso_contabilidad) {
-    especialidadItems.push({ href: "/dashboard/contabilidad", label: "Contabilidad", icon: <Wallet size={20} />, key: "contabilidad" });
+    especialidadItems.push({ href: "/dashboard/contabilidad", label: "Contabilidad", icon: <Wallet size={20} />, key: "contabilidad", section: "Finanzas" });
   }
   if (usuario.rol === "medico" && permisos.acceso_seguros) {
-    especialidadItems.push({ href: "/dashboard/seguros", label: "Seguros / ARS", icon: <ShieldCheck size={20} />, key: "seguros" });
+    especialidadItems.push({ href: "/dashboard/seguros", label: "Seguros / ARS", icon: <ShieldCheck size={20} />, key: "seguros", section: "Finanzas" });
   }
   if (usuario.rol === "medico" && permisos.acceso_cxc) {
-    especialidadItems.push({ href: "/dashboard/cxc", label: "Cuentas por Cobrar", icon: <Landmark size={20} />, key: "cxc" });
+    especialidadItems.push({ href: "/dashboard/cxc", label: "Cuentas por Cobrar", icon: <Landmark size={20} />, key: "cxc", section: "Finanzas" });
   }
   if (usuario.rol === "medico" && permisos.acceso_finanzas) {
-    especialidadItems.push({ href: "/dashboard/finanzas", label: "Finanzas", icon: <PieChart size={20} />, key: "finanzas" });
+    especialidadItems.push({ href: "/dashboard/finanzas", label: "Finanzas", icon: <PieChart size={20} />, key: "finanzas", section: "Finanzas" });
   }
   if (usuario.rol === "medico" && permisos.acceso_libros) {
-    especialidadItems.push({ href: "/dashboard/libros", label: "Libros Contables", icon: <BookOpen size={20} />, key: "libros" });
+    especialidadItems.push({ href: "/dashboard/libros", label: "Libros Contables", icon: <BookOpen size={20} />, key: "libros", section: "Finanzas" });
   }
 
   const medicoMenu = medicoMenuItems.filter((item) => {
@@ -126,24 +128,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const secretariaItems: MenuItem[] = [];
   if (usuario.rol === "secretaria") {
     if (permisos.acceso_citas) {
-      secretariaItems.push({ href: "/dashboard/mis-citas", label: "CITAS", icon: <Calendar size={20} />, key: "mis-citas" });
-      secretariaItems.push({ href: "/dashboard/crear-cita", label: "Agregar Consulta", icon: <Plus size={20} />, key: "crear-cita" });
+      secretariaItems.push({ href: "/dashboard/mis-citas", label: "CITAS", icon: <Calendar size={20} />, key: "mis-citas", section: "Agenda" });
+      secretariaItems.push({ href: "/dashboard/crear-cita", label: "Agregar Consulta", icon: <Plus size={20} />, key: "crear-cita", section: "Agenda" });
     }
     if (permisos.acceso_pacientes) {
-      secretariaItems.push({ href: "/dashboard/pacientes", label: "Pacientes", icon: <Users size={20} />, key: "pacientes" });
-      secretariaItems.push({ href: "/dashboard/crear-paciente", label: "Nuevo Paciente", icon: <UserPlus size={20} />, key: "crear-paciente" });
+      secretariaItems.push({ href: "/dashboard/pacientes", label: "Pacientes", icon: <Users size={20} />, key: "pacientes", section: "Pacientes" });
+      secretariaItems.push({ href: "/dashboard/crear-paciente", label: "Nuevo Paciente", icon: <UserPlus size={20} />, key: "crear-paciente", section: "Pacientes" });
     }
     if (permisos.acceso_facturacion) {
-      secretariaItems.push({ href: "/dashboard/facturacion", label: "Facturación", icon: <Receipt size={20} />, key: "facturacion" });
+      secretariaItems.push({ href: "/dashboard/facturacion", label: "Facturación", icon: <Receipt size={20} />, key: "facturacion", section: "Finanzas" });
     }
     if (permisos.acceso_contabilidad) {
-      secretariaItems.push({ href: "/dashboard/contabilidad", label: "Contabilidad", icon: <Wallet size={20} />, key: "contabilidad" });
+      secretariaItems.push({ href: "/dashboard/contabilidad", label: "Contabilidad", icon: <Wallet size={20} />, key: "contabilidad", section: "Finanzas" });
     }
     if (permisos.acceso_cxc) {
-      secretariaItems.push({ href: "/dashboard/cxc", label: "Cuentas por Cobrar", icon: <Landmark size={20} />, key: "cxc" });
+      secretariaItems.push({ href: "/dashboard/cxc", label: "Cuentas por Cobrar", icon: <Landmark size={20} />, key: "cxc", section: "Finanzas" });
     }
     if (permisos.acceso_finanzas) {
-      secretariaItems.push({ href: "/dashboard/finanzas", label: "Finanzas", icon: <PieChart size={20} />, key: "finanzas" });
+      secretariaItems.push({ href: "/dashboard/finanzas", label: "Finanzas", icon: <PieChart size={20} />, key: "finanzas", section: "Finanzas" });
     }
   }
 
@@ -168,6 +170,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const currentPage = menuItems.find((m) => isActive(m.href))?.label || "Dashboard";
+
+  // Categorías en orden de aparición
+  const secciones = menuItems.reduce<string[]>((acc, item) => {
+    if (!acc.includes(item.section)) acc.push(item.section);
+    return acc;
+  }, []);
 
   return (
     <div className={styles.layout}>
@@ -206,28 +214,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className={styles.divider} />
 
-        {/* Navegación */}
+        {/* Navegación agrupada por categoría */}
         <nav className={styles.nav}>
-          {!collapsed && (
-            <p className={styles.navSection}>
-              {usuario.rol === "admin" ? "Administración" : usuario.rol === "secretaria" ? "Recepción" : "Panel Médico"}
-            </p>
-          )}
-          {menuItems.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
-                title={collapsed ? item.label : undefined}
-              >
-                <span className={styles.navIcon}>{item.icon}</span>
-                {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
-                {active && !collapsed && <span className={styles.activeIndicator} />}
-              </Link>
-            );
-          })}
+          {secciones.map((seccion, i) => (
+            <div key={seccion}>
+              {!collapsed ? (
+                <p className={styles.navSection} style={i > 0 ? { marginTop: 14 } : undefined}>
+                  {seccion}
+                </p>
+              ) : (
+                i > 0 && <div className={styles.divider} style={{ margin: "8px 0" }} />
+              )}
+              {menuItems
+                .filter((item) => item.section === seccion)
+                .map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <span className={styles.navIcon}>{item.icon}</span>
+                      {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
+                      {active && !collapsed && <span className={styles.activeIndicator} />}
+                    </Link>
+                  );
+                })}
+            </div>
+          ))}
         </nav>
 
         <div style={{ flex: 1 }} />
@@ -238,7 +254,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className={styles.userAvatar}>{initials}</div>
           {!collapsed && (
             <div className={styles.userInfo}>
-              <p className={styles.userName}>{usuario.nombre_completo}</p>
+              <p className={styles.userName}>{usuario.nombre_completo?.toUpperCase()}</p>
               <p className={styles.userEmail}>{usuario.email}</p>
             </div>
           )}
@@ -273,7 +289,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {usuario.especialidad}
               </span>
             )}
-            <div className={styles.topAvatar} title={usuario.nombre_completo}>
+            <div className={styles.topAvatar} title={usuario.nombre_completo?.toUpperCase()}>
               {initials}
             </div>
           </div>

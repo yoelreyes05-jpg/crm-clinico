@@ -158,7 +158,7 @@ function HistorialCard({ h, defaultOpen }: { h: Historial; defaultOpen?: boolean
             <span className={`${styles.historialEsp} ${esGine ? styles.historialEspGine : ""}`}>
               {h.especialidad || "General"}
             </span>
-            {h.usuarios_clinica && <span>Dr. {h.usuarios_clinica.nombre_completo}</span>}
+            {h.usuarios_clinica && <span>Dr. {h.usuarios_clinica.nombre_completo?.toUpperCase()}</span>}
           </div>
         </div>
         <span className={styles.chevron}>
@@ -318,7 +318,7 @@ function GineCard({ g, defaultOpen }: { g: FichaGine; defaultOpen?: boolean }) {
           </p>
           <p className={styles.gineFecha}>
             Ginecología · {fmtFechaCorta(g.created_at)}
-            {g.usuarios_clinica && ` · Dr. ${g.usuarios_clinica.nombre_completo}`}
+            {g.usuarios_clinica && ` · Dr. ${g.usuarios_clinica.nombre_completo?.toUpperCase()}`}
           </p>
         </div>
         <span className={styles.chevron}>
@@ -672,7 +672,7 @@ export default function PacientePortal() {
                   <div className={styles.citaInfo}>
                     <p className={styles.citaEsp}>{c.especialidad}</p>
                     {c.motivo_cita && <p>📋 {c.motivo_cita}</p>}
-                    {c.usuarios_clinica && <p>👨‍⚕️ Dr. {c.usuarios_clinica.nombre_completo}</p>}
+                    {c.usuarios_clinica && <p>👨‍⚕️ Dr. {c.usuarios_clinica.nombre_completo?.toUpperCase()}</p>}
                     {c.duracion_minutos && <p>⏱ {c.duracion_minutos} minutos</p>}
                     {c.notas && <p style={{ fontStyle: "italic", color: "#64748b", marginTop: 4 }}>"{c.notas}"</p>}
                   </div>

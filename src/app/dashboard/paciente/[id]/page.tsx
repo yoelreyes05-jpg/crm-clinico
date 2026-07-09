@@ -546,7 +546,7 @@ export default function PacienteDetallePage() {
   const [loading, setLoading] = useState(true);
 
   const esGinecologo = usuario?.especialidad === "ginecologia";
-  const medicoNombre = usuario?.nombre_completo || "Médico";
+  const medicoNombre = usuario?.nombre_completo?.toUpperCase() || "MÉDICO";
 
   useEffect(() => {
     if (authLoading) return;

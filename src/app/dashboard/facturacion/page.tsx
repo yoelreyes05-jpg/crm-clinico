@@ -181,7 +181,7 @@ export default function FacturacionPage() {
                     </td>
                     <td>{f.fecha_emision}</td>
                     <td>{f.paciente?.nombre_completo || "—"}</td>
-                    <td>{f.medico?.nombre_completo || "—"}</td>
+                    <td>{f.medico?.nombre_completo?.toUpperCase() || "—"}</td>
                     <td>{f.aseguradora?.nombre || "—"}</td>
                     <td className={styles.monto}>{RD.format(Number(f.total))}</td>
                     <td>
